@@ -1,0 +1,29 @@
+{
+  "name": "lionmax-universal-logon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "demo": "node examples/demo-app.js",
+    "test": "node --test tests/core.test.js",
+    "test:browser": "node tests/browser.mjs",
+    "client:add": "node scripts/client-add.js",
+    "backup": "node scripts/backup.js"
+  },
+  "dependencies": {
+    "argon2": "0.45.1",
+    "cookie-parser": "1.4.7",
+    "express": "5.2.1",
+    "express-rate-limit": "8.7.0",
+    "helmet": "8.3.0",
+    "jose": "6.2.12",
+    "oidc-provider": "9.12.2"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
