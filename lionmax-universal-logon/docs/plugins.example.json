@@ -1,0 +1,6 @@
+{
+  "microsoft": { "clientId": "", "tenantId": "" },
+  "google": { "clientId": "", "clientSecretEnv": "" },
+  "slack": { "clientId": "", "clientSecretEnv": "LIONMAX_SLACK_CLIENT_SECRET" },
+  "custom": []
+}

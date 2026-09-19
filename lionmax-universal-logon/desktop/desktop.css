@@ -1,0 +1,29 @@
+html.desktop { background: #202020; color-scheme: dark; --bg: #202020; --panel: #282828; --gold: #91d5ac; --ink: #f2f2f2; --muted: #b6b6b6; --line: #454545; }
+.desktop label { color: #e5e5e5; font-size: 13px; }
+.desktop .primary { color: white; }
+.desktop .reveal { color: #d6d6d6; min-height: 24px; }
+.desktop .notice { color: #f0d9a0; background: #393326; }
+.desktop .error { color: #ffb4b4; background: #42292b; }
+.desktop .token-card { background: #202c25; }
+.desktop body { margin: 0; background: #202020; color: #f2f2f2; font: 14px/1.5 'Segoe UI Variable', 'Segoe UI', sans-serif; }
+.desktop body > header, .desktop body > footer, .desktop .story { display: none; }
+.desktop .desktop-nav { position: fixed; inset: 0 auto 0 0; width: 224px; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box; }
+.desktop-brand { font-size: 22px; font-weight: 600; padding: 4px 14px 26px; }
+.desktop .desktop-nav a { text-decoration: none; color: #e5e5e5; border-radius: 5px; padding: 10px 14px; border-left: 3px solid transparent; }
+.desktop .desktop-nav a:hover { background: #303030; }
+.desktop .desktop-nav a[aria-current] { background: #303c34; border-left-color: #91d5ac; font-weight: 600; }
+.desktop-status { margin-top: auto; padding: 16px; color: #b6b6b6; font-size: 12px; }
+.desktop main, .desktop main.wide { display: block; margin: 8px 8px 8px 224px; padding: 32px 40px; max-width: none; min-height: calc(100vh - 16px); box-sizing: border-box; background: #282828; border: 1px solid #393939; border-radius: 8px; box-shadow: none; }
+.desktop .panel { padding: 0; max-width: 680px; margin: 0 auto; background: transparent; border: 0; box-shadow: none; }
+.desktop h2 { font-family: inherit; font-size: 28px; font-weight: 600; letter-spacing: -.5px; margin: 8px 0 16px; }
+.desktop h3 { font-size: 18px; }
+.desktop .intro { font-size: 14px; color: #b6b6b6; margin-bottom: 24px; }
+.desktop .panel-top, .desktop .eyebrow, .desktop .orbit { display: none; }
+.desktop input:not([type=checkbox]) { min-height: 34px; padding: 8px 12px; font: inherit; border: 1px solid #555; border-bottom-color: #999; border-radius: 4px; background: #333; color: #f2f2f2; }
+.desktop input:focus { outline: 2px solid #91d5ac; outline-offset: 1px; }
+.desktop button, .desktop .button-link { font-family: inherit; border-radius: 4px; font-size: 14px; min-height: 32px; }
+.desktop .primary { background: #216044; padding: 9px 20px; box-shadow: none; }
+.desktop .secondary { padding: 8px 16px; }
+.desktop .security-note, .desktop .notice { border-radius: 5px; font-size: 12px; padding: 12px 16px; }
+.desktop a:focus-visible, .desktop button:focus-visible { outline: 2px solid #91d5ac; outline-offset: 3px; }
+@media(max-width: 720px) { .desktop .desktop-nav { width: 168px; padding: 12px 6px; } .desktop main, .desktop main.wide { margin-left: 168px; padding: 22px 18px; } }

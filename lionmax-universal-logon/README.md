@@ -1,6 +1,8 @@
 # LionMax Universal Logon
 
-![LionMax sign-in screen](docs/lionmax-login.png)
+![LionMax desktop account setup](docs/lionmax-desktop-setup.png)
+
+[Download LionMax Desktop 0.2.0 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.2.0)
 
 LionMax is a standalone identity service. A user signs in with a username, password and personal seven-character alphanumeric token. After five failed attempts the account locks for 15 minutes; the counter and lock persist through a restart. Token verification records the observed IP, time and outcome. The account screen groups attempts by exact IP for the last 90 days.
 
@@ -8,7 +10,13 @@ Another application can integrate LionMax through OpenID Connect Authorization C
 
 ## Run on Windows
 
-Download and extract the Windows ZIP, then open **LionMax Universal Logon.exe** or **Start LionMax.cmd**. LionMax opens at `http://127.0.0.1:4545/login`. The separate Northstar demo runs at `http://127.0.0.1:4546`. Use **Stop LionMax.cmd** to stop instances started by the launcher. The ZIP includes Node and its dependencies. Keep the folder intact when moving it.
+The account setup page includes Microsoft 365, Google Workspace and Slack identity connectors. Selections, verified linked accounts and saved proprietary website links persist in the user database. **Connections** shows whether a provider needs configuration, is ready, or has been linked. Custom OpenID Connect providers can be added through local configuration; proprietary software can also use LionMax as its OIDC sign-in provider. See [connector setup](docs/CONNECTORS.md). Provider registration and credentials are required before live connections work; saved website links alone do not enable single sign-on.
+
+The standalone desktop build opens in its own LionMax window and does not require Edge or another browser. Run `npm run build:desktop` to create `release/desktop/LionMax-win32-x64/LionMax.exe`. Keep the complete output folder together when copying it. Node and the desktop runtime are bundled, so local sign-in works without Internet access. Existing accounts remain in `%LOCALAPPDATA%\LionMax\data`. Closing the desktop program stops services it started; services already running before launch are left running.
+
+The older ZIP described below uses the browser launcher.
+
+For the older 0.1.0 release, download and extract its Windows ZIP, then open **LionMax Universal Logon.exe** or **Start LionMax.cmd**. LionMax opens at `http://127.0.0.1:4545/login`. The separate Northstar demo runs at `http://127.0.0.1:4546`. Use **Stop LionMax.cmd** to stop instances started by the launcher. The ZIP includes Node and its dependencies. Keep the folder intact when moving it.
 
 Accounts, sessions, signing keys and audit data live under `%LOCALAPPDATA%\LionMax\data`, separate from the application files, so a new version does not erase the database. The launcher writes diagnostics under `%LOCALAPPDATA%\LionMax`. The token appears once when an account is created or replaced; save it in a password manager. This release has no self-service recovery if both the token and its copy are lost. Do not create important accounts until an operator has a verified recovery procedure.
 

@@ -1,15 +1,18 @@
 {
   "name": "lionmax-universal-logon",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=24"
   },
   "scripts": {
+    "desktop": "electron desktop/main.cjs",
+    "build:desktop": "node scripts/build-desktop.mjs",
     "start": "node src/server.js",
     "demo": "node examples/demo-app.js",
-    "test": "node --test tests/core.test.js",
+    "test": "node --test tests/core.test.js tests/connections.test.js",
+    "test:desktop": "node tests/desktop.mjs",
     "test:browser": "node tests/browser.mjs",
     "client:add": "node scripts/client-add.js",
     "backup": "node scripts/backup.js"
@@ -21,9 +24,12 @@
     "express-rate-limit": "8.7.0",
     "helmet": "8.3.0",
     "jose": "6.2.12",
-    "oidc-provider": "9.12.2"
+    "oidc-provider": "9.12.2",
+    "openid-client": "^6.8.8"
   },
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^44.4.3",
     "playwright": "1.63.0"
   }
 }
