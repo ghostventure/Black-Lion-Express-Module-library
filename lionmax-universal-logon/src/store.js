@@ -1,3 +1,4 @@
+import { passwordWork } from './reliability.js';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -16,7 +17,9 @@ export class Store {
     mkdirSync(dirname(file), { recursive: true });
     this.now = now;
     this.db = new DatabaseSync(file);
-    this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000;
+    this.db.exec('PRAGMA busy_timeout=1500');
+    try { if(this.db.prepare('PRAGMA quick_check').get().quick_check!=='ok')throw Error('Database integrity check failed'); } catch(error) { this.db.close(); throw Error('The account database needs recovery. Original files have been preserved. Restore a verified backup.'); }
+    this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;
       CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,username TEXT UNIQUE NOT NULL,name TEXT NOT NULL,password_hash TEXT NOT NULL,token_hash TEXT NOT NULL,failures INTEGER NOT NULL DEFAULT 0,locked_until INTEGER NOT NULL DEFAULT 0,version INTEGER NOT NULL DEFAULT 1,created_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY,user_id TEXT NOT NULL,version INTEGER NOT NULL,expires INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS oidc(model TEXT NOT NULL,id TEXT NOT NULL,payload TEXT NOT NULL,expires INTEGER,grant_id TEXT,uid TEXT,user_code TEXT,PRIMARY KEY(model,id));
@@ -26,6 +29,9 @@ export class Store {
       CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,event TEXT NOT NULL,user_id TEXT,at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS token_usage(id INTEGER PRIMARY KEY,user_id TEXT NOT NULL,ip TEXT NOT NULL,success INTEGER NOT NULL,at INTEGER NOT NULL);
       CREATE INDEX IF NOT EXISTS usage_account ON token_usage(user_id,at);
+      CREATE INDEX IF NOT EXISTS usage_expiry ON token_usage(at);
+      CREATE INDEX IF NOT EXISTS session_expiry ON sessions(expires);
+      CREATE INDEX IF NOT EXISTS audit_expiry ON audit(at);
       CREATE TABLE IF NOT EXISTS throttles(key TEXT PRIMARY KEY,count INTEGER NOT NULL,expires INTEGER NOT NULL);`);
     this.db.prepare('DELETE FROM token_usage WHERE at<?').run(this.now()-90*24*60*60_000);
     this.db.prepare('DELETE FROM oidc WHERE expires IS NOT NULL AND expires<?').run(this.now());
@@ -34,16 +40,19 @@ export class Store {
   }
   getUser(id) { return this.db.prepare('SELECT * FROM users WHERE id=?').get(id); }
   audit(event, id = null) { this.db.prepare('INSERT INTO audit(event,user_id,at) VALUES(?,?,?)').run(event,id,this.now()); }
-  async register({ username, password, name }) {
+  async register({ username, password, name, selectedPlugins = [] }) {
     username = String(username || '').trim().toLowerCase(); name = String(name || '').trim();
     if (!/^[a-z0-9][a-z0-9_.-]{2,31}$/.test(username)) throw Error('Use a username of 3–32 letters, numbers, dots, underscores or hyphens.');
     if (typeof password !== 'string' || password.length < 15 || password.length > 128) throw Error('Use a password between 15 and 128 characters. A long passphrase works well.');
     if (!name || name.length > 80) throw Error('Enter your name (up to 80 characters).');
     const token = generateToken(), id = randomUUID();
-    const [passwordHash, tokenHash] = await Promise.all([argon2.hash(password, options), argon2.hash(token, options)]);
-    try { this.db.prepare('INSERT INTO users(id,username,name,password_hash,token_hash,created_at) VALUES(?,?,?,?,?,?)').run(id,username,name,passwordHash,tokenHash,this.now()); }
-    catch (e) { if (e.code?.includes('SQLITE') && e.message.includes('UNIQUE')) throw Error('This username cannot be registered. Choose another.'); throw e; }
-    this.audit('account.created',id);
+    const [passwordHash, tokenHash] = await passwordWork(() => Promise.all([argon2.hash(password, options), argon2.hash(token, options)]));
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      this.db.prepare('INSERT INTO users(id,username,name,password_hash,token_hash,created_at) VALUES(?,?,?,?,?,?)').run(id,username,name,passwordHash,tokenHash,this.now());
+      for(const plugin of new Set(selectedPlugins))this.db.prepare('INSERT INTO user_plugins VALUES(?,?)').run(id,plugin);
+      this.audit('account.created',id);this.db.exec('COMMIT');
+    }catch(e){this.db.exec('ROLLBACK');if(e.code?.includes('SQLITE')&&e.message.includes('UNIQUE'))throw Error('This username cannot be registered. Choose another.');throw e;}
     return { id, username, name, token };
   }
   async authenticate(username, password, token, ip = 'unknown') {
@@ -53,7 +62,7 @@ export class Store {
     const dummy = await this.dummy;
     const safePassword = typeof password === 'string' && password.length <= 128 ? password : '';
     const safeToken = typeof token === 'string' && token.length <= 32 ? token.trim() : '';
-    const [passOk, tokenOk] = await Promise.all([argon2.verify(user?.password_hash || dummy,safePassword),argon2.verify(user?.token_hash || dummy,safeToken)]);
+    const [passOk, tokenOk] = await passwordWork(() => Promise.all([argon2.verify(user?.password_hash || dummy,safePassword),argon2.verify(user?.token_hash || dummy,safeToken)]));
     if (!user) return { ok: false };
     this.db.exec('BEGIN IMMEDIATE');
     try {
@@ -70,7 +79,6 @@ export class Store {
         this.audit(until ? 'login.locked' : 'login.failed',user.id);
       }
       this.db.prepare('INSERT INTO token_usage(user_id,ip,success,at) VALUES(?,?,?,?)').run(user.id,ip,result.ok?1:0,now);
-      this.db.prepare('DELETE FROM token_usage WHERE at<?').run(now-90*24*60*60_000);
       this.db.exec('COMMIT'); return result;
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
@@ -97,7 +105,7 @@ export class Store {
   async rotateToken(id,password,token,ip) {
     const current=this.getUser(id);const verified=await this.authenticate(current.username,password,token,ip);
     if(!verified.ok)throw Error('Credentials not accepted. After five failures, wait 15 minutes before trying again.');
-    const next=generateToken(),encoded=await argon2.hash(next,options);
+    const next=generateToken(),encoded=await passwordWork(()=>argon2.hash(next,options));
     this.db.exec('BEGIN IMMEDIATE');
     try {
       const result=this.db.prepare('UPDATE users SET token_hash=?,version=version+1 WHERE id=? AND version=?').run(encoded,id,verified.user.version);

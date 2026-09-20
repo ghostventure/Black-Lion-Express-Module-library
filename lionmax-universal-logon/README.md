@@ -2,13 +2,15 @@
 
 ![LionMax desktop account setup](docs/lionmax-desktop-setup.png)
 
-[Download LionMax Desktop 0.2.0 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.2.0)
+[Download LionMax Desktop 0.3.0 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.3.0)
 
 LionMax is a standalone identity service. A user signs in with a username, password and personal seven-character alphanumeric token. After five failed attempts the account locks for 15 minutes; the counter and lock persist through a restart. Token verification records the observed IP, time and outcome. The account screen groups attempts by exact IP for the last 90 days.
 
 Another application can integrate LionMax through OpenID Connect Authorization Code with PKCE. The included Northstar app runs at a separate origin and demonstrates the whole flow. Client apps never receive the LionMax password or personal token. External software must choose to integrate LionMax; it cannot automatically authenticate unrelated applications.
 
 ## Run on Windows
+
+Use **LionMax-Setup-0.3.0-win-x64.exe** for a per-user installation with desktop/Start Menu shortcuts and an uninstaller, or extract the portable ZIP and run **LionMax.exe**. Version 0.3.0 adds verified application files, bounded crash recovery, daily verified SQLite snapshots, startup/error screens and a pinned Node runtime. See [hardening and recovery boundaries](docs/HARDENING.md). The current build is unsigned.
 
 The account setup page includes Microsoft 365, Google Workspace and Slack identity connectors. Selections, verified linked accounts and saved proprietary website links persist in the user database. **Connections** shows whether a provider needs configuration, is ready, or has been linked. Custom OpenID Connect providers can be added through local configuration; proprietary software can also use LionMax as its OIDC sign-in provider. See [connector setup](docs/CONNECTORS.md). Provider registration and credentials are required before live connections work; saved website links alone do not enable single sign-on.
 

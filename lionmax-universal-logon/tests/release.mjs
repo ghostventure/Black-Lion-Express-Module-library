@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import { request } from 'node:http';
+import { spawn, execFileSync } from 'node:child_process';
+import { mkdtempSync, cpSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { getCurrentFuseWire, FuseV1Options as F, FuseState as S } from '@electron/fuses';
+const root = resolve('release/desktop/LionMax-win32-x64'), exe = join(root, 'LionMax.exe');
+const wire = await getCurrentFuseWire(exe);
+for (const key of [F.RunAsNode, F.EnableNodeOptionsEnvironmentVariable, F.EnableNodeCliInspectArguments, F.GrantFileProtocolExtraPrivileges]) assert.equal(wire[key], S.DISABLE);
+for (const key of [F.EnableCookieEncryption, F.EnableEmbeddedAsarIntegrityValidation, F.OnlyLoadAppFromAsar]) assert.equal(wire[key], S.ENABLE);
+const env = { ...process.env, LIONMAX_DATA_DIR: mkdtempSync(join(tmpdir(), 'lionmax-release-')) };
+delete env.ELECTRON_RUN_AS_NODE;
+let child;
+const delay = ms => new Promise(r => setTimeout(r, ms));
+try {
+  await assert.rejects(fetch('http://127.0.0.1:4545/health'));
+  const began = Date.now(); child = spawn(exe, [], { env, windowsHide: false, stdio: 'ignore' });
+  let healthy = false;
+  for (let i = 0; i < 100; i++) { await delay(150); try { const health = await (await fetch('http://127.0.0.1:4545/health')).json(); if (health.version === '0.3.0') { healthy = true; break; } } catch {} }
+  assert.ok(healthy, 'Hardened EXE did not start');
+  const startupMs = Date.now() - began;
+  await assert.rejects(fetch('http://127.0.0.1:4546/health'), 'Demo must not start during normal startup');
+  const badHost=await new Promise((resolve,reject)=>{const req=request('http://127.0.0.1:4545/health',{headers:{Host:'attacker.example'}},res=>{res.resume();resolve(res.statusCode)});req.on('error',reject);req.end();});assert.equal(badHost,421);
+  const oversized = await fetch('http://127.0.0.1:4545/register', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'name=' + 'x'.repeat(10000) }); assert.equal(oversized.status, 413);
+  execFileSync('powershell.exe', ['-NoProfile', '-Command', `$p=Get-Process -Id ${child.pid}; if(-not $p.CloseMainWindow()){throw 'No visible main window'}`]);
+  await Promise.race([new Promise(r => child.once('exit', r)), delay(7000)]);
+  assert.notEqual(child.exitCode, null, 'Desktop did not shut down'); child = null;
+  await assert.rejects(fetch('http://127.0.0.1:4545/health'));
+  const copy = mkdtempSync(resolve('artifacts', 'tamper-release-')); cpSync(root, copy, { recursive: true });
+  const asar = join(copy, 'resources', 'app.asar'), bytes = readFileSync(asar);
+  const offset = bytes.indexOf(Buffer.from('nativeTheme.themeSource')); assert.ok(offset > 0);
+  bytes[offset] ^= 1; writeFileSync(asar, bytes);
+  let output = ''; child = spawn(join(copy, 'LionMax.exe'), [], { env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  child.stderr.on('data', b => { output += b; }); child.stdout.on('data', b => { output += b; });
+  await Promise.race([new Promise(r => child.once('exit', r)), delay(10000)]);
+  assert.notEqual(child.exitCode, null, 'Modified archive was not rejected');
+  assert.match(output, /integrity/i); child = null;
+  writeFileSync('artifacts/release-verification.json', JSON.stringify({ passed: true, startupMs, checks: ['release fuse settings', 'hardened EXE startup', 'lazy demo', 'Host rejection', 'body limit', 'graceful shutdown', 'real modified-ASAR rejection'] }, null, 2));
+  console.log(`PASS: hardened release, startup ${startupMs}ms, rejected modified ASAR, Host and oversized request; demo stayed stopped`);
+} finally { if (child && child.exitCode === null) child.kill(); }

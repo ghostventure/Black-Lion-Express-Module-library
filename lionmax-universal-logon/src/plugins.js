@@ -56,6 +56,13 @@ export function loadPlugins(dataDir, origin, env = process.env) {
 export function publicPlugins(plugins) {
   return plugins.map(({ id, name, initials, description, ready, issue, custom }) => ({ id, name, initials, description, ready, issue, custom }));
 }
+export function loadPluginsSafely(dataDir, origin, env = process.env) {
+  try { return loadPlugins(dataDir, origin, env); }
+  catch (error) {
+    console.error('Connector configuration disabled:', error.name);
+    return officePlugins.map(p => ({ ...p, ready: false, issue: 'Connector configuration needs administrator attention. Local LionMax sign-in is still available.' }));
+  }
+}
 export function pluginClient(plugin, fetchOverride) {
   if (!plugin.ready) throw Error(plugin.issue || 'Connector is not configured.');
   const client = new oidc.Configuration({ ...plugin.metadata, id_token_signing_alg_values_supported: ['RS256'] }, plugin.clientId, { id_token_signed_response_alg: 'RS256' }, plugin.clientSecret ? oidc.ClientSecretPost(plugin.clientSecret) : oidc.None());

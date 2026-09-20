@@ -1,11 +1,11 @@
 import { Connections } from './connections-store.js';
-import { loadPlugins, publicPlugins, authorization, completeAuthorization } from './plugins.js';
+import { loadPluginsSafely, publicPlugins, authorization, completeAuthorization } from './plugins.js';
 import { connectionsPage, connectorSetup } from './connections-ui.js';
 import { escape, layout } from './views.js';
 
 export function installConnections(app, { store, dataDir, issuer, form, csrf, checkForm, signedIn }) {
   const connections = new Connections(store);
-  const plugins = loadPlugins(dataDir, issuer);
+  const plugins = loadPluginsSafely(dataDir, issuer);
   const catalog = publicPlugins(plugins);
   const ids = plugins.map(p => p.id);
   const page = (req, res, message = '', status = 200) => res.status(status).send(connectionsPage({ plugins: catalog, selected: connections.selected(req.user.id), identities: connections.identities(req.user.id), websites: connections.websites(req.user.id), grants: connections.grants(req.user.id), csrf: csrf(req, res), message }));

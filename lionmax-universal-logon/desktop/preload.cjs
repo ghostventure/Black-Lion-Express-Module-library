@@ -1,4 +1,5 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, contextBridge } = require('electron');
+if (location.protocol === 'lionmax:') contextBridge.exposeInMainWorld('lionmaxRecovery', { retry: () => ipcRenderer.invoke('lionmax:retry'), logs: () => ipcRenderer.invoke('lionmax:logs') });
 window.addEventListener('DOMContentLoaded', () => {
   if (location.origin !== 'http://127.0.0.1:4545') return;
   document.documentElement.classList.add('desktop');

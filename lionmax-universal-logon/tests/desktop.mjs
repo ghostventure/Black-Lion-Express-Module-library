@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
-const executablePath = resolve('release/desktop/LionMax-win32-x64/LionMax.exe');
+const executablePath = resolve('artifacts/desktop-test/LionMax-win32-x64/LionMax.exe');
 const data = mkdtempSync(join(tmpdir(), 'lionmax-desktop-test-'));
 const env = { ...process.env, LIONMAX_DATA_DIR: data };
 delete env.ELECTRON_RUN_AS_NODE;
