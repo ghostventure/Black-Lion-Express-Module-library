@@ -1,7 +1,9 @@
-# Reliability and tamper resistance in 0.3.0
+# Reliability and tamper resistance in 0.3.1
 
 LionMax is a local identity prototype, not a promise of crash-free operation or a certified identity provider. These controls are implemented and tested:
 
+- One desktop instance is allowed per Windows user. Installed and portable copies use the same LionMax profile and lock, including launches with an alternate `--user-data-dir`. A second launch restores the existing window. Electron still uses several helper processes for one application window. Older versions must be closed before switching to this build.
+- Native filesystem notifications trigger a full application-file check after a short coalescing delay (750 ms); no hashing runs while idle except a backup full check every ten minutes. Scans never overlap. Files are also verified before startup and before starting the optional demo. Detected changes stop the owned services and show a recovery screen; retry verifies the files again. Root directory junctions and nested links are rejected. This is change detection, not an operating-system file-write prevention mechanism; there remains a detection window, and missed notifications rely on the backup scan. No extra dependency or background process is added.
 - A visible startup/recovery screen replaces blank windows. Users can retry startup or open diagnostic logs. Window size and position are remembered; forms indicate pending work and suppress duplicate submits.
 - The desktop verifies an embedded SHA-256 manifest of every bundled backend/runtime file before launching it, including rejection of extra files and symlinks. The manifest is inside the integrity-checked application archive.
 - Electron ASAR integrity validation and archive-only loading are enabled. Run-as-Node, Node environment overrides, main-process inspector flags, development tools, remote debugging switches and extra file-protocol privileges are disabled in the release executable. Cookies use Windows-backed encryption. The UI is sandboxed with context isolation and no Node integration.

@@ -2,7 +2,7 @@
 
 ![LionMax desktop account setup](docs/lionmax-desktop-setup.png)
 
-[Download LionMax Desktop 0.3.0 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.3.0)
+[Download LionMax Desktop 0.3.1 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.3.1)
 
 LionMax is a standalone identity service. A user signs in with a username, password and personal seven-character alphanumeric token. After five failed attempts the account locks for 15 minutes; the counter and lock persist through a restart. Token verification records the observed IP, time and outcome. The account screen groups attempts by exact IP for the last 90 days.
 
@@ -10,9 +10,11 @@ Another application can integrate LionMax through OpenID Connect Authorization C
 
 ## Run on Windows
 
-Use **LionMax-Setup-0.3.0-win-x64.exe** for a per-user installation with desktop/Start Menu shortcuts and an uninstaller, or extract the portable ZIP and run **LionMax.exe**. Version 0.3.0 adds verified application files, bounded crash recovery, daily verified SQLite snapshots, startup/error screens and a pinned Node runtime. See [hardening and recovery boundaries](docs/HARDENING.md). The current build is unsigned.
+Use **LionMax-Setup-0.3.1-win-x64.exe** for a per-user installation with desktop/Start Menu shortcuts and an uninstaller, or extract the portable ZIP and run **LionMax.exe**. Version 0.3.1 includes verified application files, bounded crash recovery, daily verified SQLite snapshots, startup/error screens and a pinned Node runtime. See [hardening and recovery boundaries](docs/HARDENING.md). The current build is unsigned.
 
 The account setup page includes Microsoft 365, Google Workspace and Slack identity connectors. Selections, verified linked accounts and saved proprietary website links persist in the user database. **Connections** shows whether a provider needs configuration, is ready, or has been linked. Custom OpenID Connect providers can be added through local configuration; proprietary software can also use LionMax as its OIDC sign-in provider. See [connector setup](docs/CONNECTORS.md). Provider registration and credentials are required before live connections work; saved website links alone do not enable single sign-on.
+
+Version 0.3.1 adds a shared single-instance identity across installed and portable copies, event-driven runtime file-integrity checks, and a neon desktop theme. Reopening LionMax restores its existing window. File changes trigger a verification check; detected tampering stops the local service until the files are repaired. Native file watchers add no separate process or dependency, and an occasional ten-minute backup scan covers missed events.
 
 The standalone desktop build opens in its own LionMax window and does not require Edge or another browser. Run `npm run build:desktop` to create `release/desktop/LionMax-win32-x64/LionMax.exe`. Keep the complete output folder together when copying it. Node and the desktop runtime are bundled, so local sign-in works without Internet access. Existing accounts remain in `%LOCALAPPDATA%\LionMax\data`. Closing the desktop program stops services it started; services already running before launch are left running.
 

@@ -42,7 +42,7 @@ function limited(req,res,next){if(!store.throttle('login:'+req.ip,30,15*60_000))
 function signedIn(req,res,next){req.user=store.session(req.cookies.lionmax_session);if(!req.user)return res.redirect('/login');next();}
 const {connections,catalog,ids:pluginIds}=installConnections(app,{store,dataDir,issuer,form,csrf,checkForm,signedIn});
 const failure='Credentials not accepted. Check all three fields. After five failed attempts, wait 15 minutes before trying again.';
-app.get('/health',(req,res)=>{healthProof(req,res);store.db.prepare('SELECT 1').get();res.json({status:'ok',service:'LionMax Universal Logon',version:'0.3.0'});});
+app.get('/health',(req,res)=>{healthProof(req,res);store.db.prepare('SELECT 1').get();res.json({status:'ok',service:'LionMax Universal Logon',version:'0.3.1'});});
 app.get('/',(req,res)=>res.redirect(store.session(req.cookies.lionmax_session)?'/account':'/login'));
 app.get('/login',(req,res)=>res.send(view.login({csrf:csrf(req,res)})));
 app.post('/login',form,checkForm,limited,async(req,res)=>{const result=await store.authenticate(req.body.username,req.body.password,req.body.token,req.ip);if(!result.ok)return res.status(401).send(view.login({csrf:csrf(req,res),error:failure}));store.logout(req.cookies.lionmax_session);res.cookie('lionmax_session',store.createSession(result.user.id),{...cookie,maxAge:30*60_000});res.redirect(303,'/account');});

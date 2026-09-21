@@ -17,9 +17,12 @@ try {
   await assert.rejects(fetch('http://127.0.0.1:4545/health'));
   const began = Date.now(); child = spawn(exe, [], { env, windowsHide: false, stdio: 'ignore' });
   let healthy = false;
-  for (let i = 0; i < 100; i++) { await delay(150); try { const health = await (await fetch('http://127.0.0.1:4545/health')).json(); if (health.version === '0.3.0') { healthy = true; break; } } catch {} }
+  for (let i = 0; i < 100; i++) { await delay(150); try { const health = await (await fetch('http://127.0.0.1:4545/health')).json(); if (health.version === '0.3.1') { healthy = true; break; } } catch {} }
   assert.ok(healthy, 'Hardened EXE did not start');
   const startupMs = Date.now() - began;
+  const sample = () => JSON.parse(execFileSync('powershell.exe', ['-NoProfile', '-Command', '$items=@(Get-Process | Where-Object { $_.Path -and $_.Path.StartsWith($env:LIONMAX_METRICS_ROOT,[StringComparison]::OrdinalIgnoreCase) }); [pscustomobject]@{Processes=$items.Count;CPUSeconds=($items | Measure-Object CPU -Sum).Sum;WorkingSetMB=[math]::Round(($items | Measure-Object WorkingSet64 -Sum).Sum/1MB,1)} | ConvertTo-Json -Compress'], { env: { ...process.env, LIONMAX_METRICS_ROOT: root }, encoding: 'utf8', windowsHide: true }));
+  await delay(2000); const beforeIdle = sample(), idleStart = Date.now(); await delay(5000); const afterIdle = sample();
+  const idle = { sampleMs: Date.now() - idleStart, cpuSeconds: +(afterIdle.CPUSeconds - beforeIdle.CPUSeconds).toFixed(3), workingSetMB: afterIdle.WorkingSetMB, processes: afterIdle.Processes };
   await assert.rejects(fetch('http://127.0.0.1:4546/health'), 'Demo must not start during normal startup');
   const badHost=await new Promise((resolve,reject)=>{const req=request('http://127.0.0.1:4545/health',{headers:{Host:'attacker.example'}},res=>{res.resume();resolve(res.statusCode)});req.on('error',reject);req.end();});assert.equal(badHost,421);
   const oversized = await fetch('http://127.0.0.1:4545/register', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'name=' + 'x'.repeat(10000) }); assert.equal(oversized.status, 413);
@@ -36,6 +39,7 @@ try {
   await Promise.race([new Promise(r => child.once('exit', r)), delay(10000)]);
   assert.notEqual(child.exitCode, null, 'Modified archive was not rejected');
   assert.match(output, /integrity/i); child = null;
-  writeFileSync('artifacts/release-verification.json', JSON.stringify({ passed: true, startupMs, checks: ['release fuse settings', 'hardened EXE startup', 'lazy demo', 'Host rejection', 'body limit', 'graceful shutdown', 'real modified-ASAR rejection'] }, null, 2));
+  writeFileSync('artifacts/release-verification.json', JSON.stringify({ passed: true, startupMs, idle, checks: ['release fuse settings', 'hardened EXE startup', 'lazy demo', 'Host rejection', 'body limit', 'graceful shutdown', 'real modified-ASAR rejection'] }, null, 2));
+  console.log('Idle sample:', JSON.stringify(idle));
   console.log(`PASS: hardened release, startup ${startupMs}ms, rejected modified ASAR, Host and oversized request; demo stayed stopped`);
 } finally { if (child && child.exitCode === null) child.kill(); }

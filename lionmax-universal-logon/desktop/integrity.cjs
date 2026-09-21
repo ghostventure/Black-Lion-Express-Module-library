@@ -2,6 +2,8 @@ const { createReadStream, promises: fs } = require('node:fs');
 const { createHash } = require('node:crypto');
 const { join, relative, resolve, sep } = require('node:path');
 async function filesIn(root) {
+  const rootInfo = await fs.lstat(root);
+  if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) throw new Error('Application directory is not a regular directory. Reinstall LionMax.');
   const files = [];
   async function walk(dir) {
     for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
@@ -9,6 +11,7 @@ async function filesIn(root) {
       if (entry.isSymbolicLink()) throw new Error('Application files contain an unexpected link. Reinstall LionMax.');
       if (entry.isDirectory()) await walk(path);
       else if (entry.isFile()) files.push(relative(root, path).split(sep).join('/'));
+      else throw new Error('Application files contain an unexpected file type. Reinstall LionMax.');
     }
   }
   await walk(root);
