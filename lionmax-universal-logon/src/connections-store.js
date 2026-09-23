@@ -35,7 +35,7 @@ export class Connections {
     if (!row || row.expires <= this.store.now() || !this.active(row)) throw Error('Connection expired. Start again in LionMax.');
     return { ...row, state };
   }
-  active(flow) { return !!this.db.prepare('SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=? AND s.user_id=? AND s.version=u.version AND s.expires>?').get(flow.session_hash, flow.user_id, this.store.now()); }
+  active(flow) { return !!this.db.prepare('SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=? AND s.user_id=? AND s.version=u.version AND s.expires>? AND s.last_seen + COALESCE((SELECT idle_minutes FROM security_settings WHERE user_id=s.user_id),10)*60000>?').get(flow.session_hash, flow.user_id, this.store.now(), this.store.now()); }
   link(flow, identity) {
     if (!this.active(flow) || flow.expires <= this.store.now()) throw Error('Sign in again before connecting.');
     const other = this.db.prepare('SELECT user_id FROM linked_identities WHERE issuer=? AND subject=?').get(identity.issuer, identity.subject);

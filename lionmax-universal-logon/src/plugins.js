@@ -12,7 +12,7 @@ export function httpsUrl(value) {
   if (url.protocol !== 'https:' || url.username || url.password || url.hash) throw Error('Use an HTTPS URL without credentials or a fragment.');
   return url.href;
 }
-export function loadPlugins(dataDir, origin, env = process.env) {
+export function loadPlugins(dataDir, origin, env = process.env, overrides = {}) {
   const file = env.LIONMAX_PLUGINS_FILE || join(dataDir, 'plugins.json');
   const config = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
   const custom = config.custom || [];
@@ -24,11 +24,11 @@ export function loadPlugins(dataDir, origin, env = process.env) {
     return { id: p.id, name: p.name, initials: 'C', description: 'Your organization’s software or website.', custom: true };
   })];
   return specs.map(spec => {
-    const settings = spec.custom ? custom.find(p => p.id === spec.id) : config[spec.id] || {};
+    const settings = spec.custom ? custom.find(p => p.id === spec.id) : overrides[spec.id] || config[spec.id] || {};
     const clientSecret = settings.clientSecretEnv ? env[settings.clientSecretEnv] : undefined;
     let issue = '', metadata, redirectUri;
     try {
-      const callbackOrigin = config.callbackOrigin || origin;
+      const callbackOrigin = settings.callbackOrigin || config.callbackOrigin || origin;
       const callback = new URL(callbackOrigin);
       if (callback.origin !== callbackOrigin || (callback.protocol !== 'https:' && !['http://127.0.0.1:4545', origin].includes(callbackOrigin))) throw Error('Invalid callback origin.');
       redirectUri = `${callbackOrigin}/connections/${spec.id}/callback`;
@@ -56,8 +56,8 @@ export function loadPlugins(dataDir, origin, env = process.env) {
 export function publicPlugins(plugins) {
   return plugins.map(({ id, name, initials, description, ready, issue, custom }) => ({ id, name, initials, description, ready, issue, custom }));
 }
-export function loadPluginsSafely(dataDir, origin, env = process.env) {
-  try { return loadPlugins(dataDir, origin, env); }
+export function loadPluginsSafely(dataDir, origin, env = process.env, overrides = {}) {
+  try { return loadPlugins(dataDir, origin, env, overrides); }
   catch (error) {
     console.error('Connector configuration disabled:', error.name);
     return officePlugins.map(p => ({ ...p, ready: false, issue: 'Connector configuration needs administrator attention. Local LionMax sign-in is still available.' }));

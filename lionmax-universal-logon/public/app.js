@@ -1,6 +1,6 @@
 for(const button of document.querySelectorAll('[data-reveal]'))button.addEventListener('click',()=>{const input=document.getElementById(button.dataset.reveal);const visible=input.type==='password';input.type=visible?'text':'password';button.textContent=visible?'Hide':'Show';button.setAttribute('aria-label',(visible?'Hide ':'Show ')+input.name)});
 
-for (const form of document.querySelectorAll('form')) {
+for (const form of document.querySelectorAll('form:not([data-local-form])')) {
   form.addEventListener('submit', event => {
     if (form.dataset.submitting === 'yes') { event.preventDefault(); return; }
     form.dataset.submitting = 'yes';

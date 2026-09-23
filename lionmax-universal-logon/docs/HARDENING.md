@@ -1,4 +1,4 @@
-# Reliability and tamper resistance in 0.3.1
+# Reliability and tamper resistance in 0.4.0
 
 LionMax is a local identity prototype, not a promise of crash-free operation or a certified identity provider. These controls are implemented and tested:
 
@@ -41,3 +41,7 @@ Research references:
 - https://www.sqlite.org/wal.html
 - https://nodejs.org/download/release/latest-v24.x/docs/api/sqlite.html
 - https://www.electron.build/nsis/
+
+## Account features
+
+See RELEASE-0.4.0.md for recovery codes, server-enforced idle expiry, Windows lock handling and additive migrations. Offline recovery follows the general controls in https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html . Windows events use https://www.electronjs.org/docs/latest/api/power-monitor .

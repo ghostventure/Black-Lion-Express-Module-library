@@ -13,7 +13,7 @@ const service = join(stage, 'service');
 mkdirSync(shell, { recursive: true });
 mkdirSync(service, { recursive: true });
 cpSync(join(root, 'desktop', 'main.cjs'), join(shell, 'main.cjs'));
-for (const file of ['preload.cjs', 'desktop.css', 'integrity.cjs', 'integrity-monitor.cjs', 'supervisor.cjs', 'status.html', 'status.css', 'status.js']) cpSync(join(root, 'desktop', file), join(shell, file));
+for (const file of ['updater.cjs', 'update-key.pem', 'preload.cjs', 'desktop.css', 'integrity.cjs', 'integrity-monitor.cjs', 'supervisor.cjs', 'status.html', 'status.css', 'status.js']) cpSync(join(root, 'desktop', file), join(shell, file));
 writeFileSync(join(shell, 'package.json'), JSON.stringify({ name: 'lionmax-desktop', productName: 'LionMax', version, main: 'main.cjs', lionmaxTestBuild: testBuild }));
 for (const entry of ['src', 'public', 'examples', 'docs', 'package.json', 'package-lock.json']) cpSync(join(root, entry), join(service, entry), { recursive: true });
 execFileSync('cmd.exe', ['/d', '/c', 'npm.cmd ci --omit=dev'], { cwd: service, stdio: 'inherit' });

@@ -1,4 +1,8 @@
 const { ipcRenderer, contextBridge } = require('electron');
+if (location.origin === 'http://127.0.0.1:4545' && location.pathname === '/updates') {
+ const api = {}; for (const action of ['status','check','download','install','automatic']) api[action] = value => ipcRenderer.invoke('lionmax:update', action, value);
+ contextBridge.exposeInMainWorld('lionmaxUpdates', api);
+}
 if (location.protocol === 'lionmax:') contextBridge.exposeInMainWorld('lionmaxRecovery', { retry: () => ipcRenderer.invoke('lionmax:retry'), logs: () => ipcRenderer.invoke('lionmax:logs') });
 window.addEventListener('DOMContentLoaded', () => {
   if (location.origin !== 'http://127.0.0.1:4545') return;
@@ -16,7 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
   brand.className = 'desktop-brand';
   brand.textContent = 'LionMax';
   nav.append(brand);
-  for (const [path, label] of [['/login','Sign in'],['/register','Create account'],['/account','My account'],['/connections','Connections'],['/privacy','Privacy & security'],['/help','Help']]) {
+  for (const [path, label] of [['/login','Sign in'],['/register','Create account'],['/account','My account'],['/launcher','App launcher'],['/security','Security'],['/appearance','Access & appearance'],['/connections','Connections'],['/updates','Updates'],['/privacy','Privacy & security'],['/help','Help']]) {
     const link = document.createElement('a');
     link.href = path;
     link.textContent = label;

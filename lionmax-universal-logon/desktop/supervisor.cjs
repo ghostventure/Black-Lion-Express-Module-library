@@ -42,6 +42,19 @@ class Supervisor {
     if (!response.ok || response.headers.get('x-lionmax-proof') !== expected) throw Error('Local service identity could not be verified. Close conflicting applications and retry.');
     const body = await response.json(); return body.service === state.name && body.status === 'ok';
   }
+  async lockSessions() {
+    const child = this.children.get(4545)?.child;
+    if (!child?.connected) throw Error('Account service is unavailable.');
+    const id = randomBytes(16).toString('hex');
+    await new Promise((resolve, reject) => {
+      const finish = error => { clearTimeout(timer); child.off('message', receive); child.off('exit', exited); error ? reject(error) : resolve(); };
+      const receive = message => { if (message?.type === 'lionmax:locked' && message.id === id) finish(); };
+      const exited = () => finish(Error('Account service stopped while locking.'));
+      const timer = setTimeout(() => finish(Error('Account service did not confirm locking.')), 3000);
+      child.on('message', receive); child.once('exit', exited);
+      child.send({ type: 'lionmax:lock', id }, error => { if (error) finish(error); });
+    });
+  }
   async stop() {
     this.stopping = true;
     await Promise.all([...this.children.values()].map(async ({ child }) => {

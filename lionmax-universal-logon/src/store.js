@@ -1,3 +1,4 @@
+import { Security } from './security-store.js';
 import { passwordWork } from './reliability.js';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
@@ -36,6 +37,7 @@ export class Store {
     this.db.prepare('DELETE FROM token_usage WHERE at<?').run(this.now()-90*24*60*60_000);
     this.db.prepare('DELETE FROM oidc WHERE expires IS NOT NULL AND expires<?').run(this.now());
     this.db.prepare('DELETE FROM sessions WHERE expires<?').run(this.now());
+    this.security = new Security(this);
     this.dummy = argon2.hash(randomBytes(32), options);
   }
   getUser(id) { return this.db.prepare('SELECT * FROM users WHERE id=?').get(id); }
@@ -47,13 +49,15 @@ export class Store {
     if (!name || name.length > 80) throw Error('Enter your name (up to 80 characters).');
     const token = generateToken(), id = randomUUID();
     const [passwordHash, tokenHash] = await passwordWork(() => Promise.all([argon2.hash(password, options), argon2.hash(token, options)]));
+    let recoveryCodes;
     this.db.exec('BEGIN IMMEDIATE');
     try {
       this.db.prepare('INSERT INTO users(id,username,name,password_hash,token_hash,created_at) VALUES(?,?,?,?,?,?)').run(id,username,name,passwordHash,tokenHash,this.now());
       for(const plugin of new Set(selectedPlugins))this.db.prepare('INSERT INTO user_plugins VALUES(?,?)').run(id,plugin);
+      recoveryCodes = this.security.issueCodes(id);
       this.audit('account.created',id);this.db.exec('COMMIT');
     }catch(e){this.db.exec('ROLLBACK');if(e.code?.includes('SQLITE')&&e.message.includes('UNIQUE'))throw Error('This username cannot be registered. Choose another.');throw e;}
-    return { id, username, name, token };
+    return { id, username, name, token, recoveryCodes };
   }
   async authenticate(username, password, token, ip = 'unknown') {
     ip=String(ip).replace(/^::ffff:/,'');if(!isIP(ip))ip='unknown';
@@ -82,15 +86,8 @@ export class Store {
       this.db.exec('COMMIT'); return result;
     } catch (e) { this.db.exec('ROLLBACK'); throw e; }
   }
-  createSession(userId) {
-    const user = this.getUser(userId), token = randomBytes(32).toString('base64url');
-    this.db.prepare('INSERT INTO sessions VALUES(?,?,?,?)').run(hash(token),userId,user.version,this.now()+30*60_000);
-    return token;
-  }
-  session(token) {
-    if (!token || typeof token !== 'string') return null;
-    return this.db.prepare('SELECT u.* FROM users u JOIN sessions s ON s.user_id=u.id WHERE s.id=? AND s.version=u.version AND s.expires>?').get(hash(token),this.now()) || null;
-  }
+  createSession(userId,ip,agent) { return this.security.createSession(userId,ip,agent); }
+  session(token) { const row = this.security.sessionRow(token); return row ? this.getUser(row.user_id) : null; }
   logout(token) { if (token) this.db.prepare('DELETE FROM sessions WHERE id=?').run(hash(token)); }
   throttle(key, limit, windowMs) {
     const now = this.now();

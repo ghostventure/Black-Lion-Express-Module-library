@@ -1,0 +1,26 @@
+/* Accessibility, appearance and account security additions. */
+html[data-accent=violet]{--gold:#c9afff}html[data-accent=amber]{--gold:#ffcf80}
+.skip-link{position:fixed;left:16px;top:-100px;z-index:100;background:var(--gold);color:#071b23;padding:12px 20px}.skip-link:focus{top:12px}
+select{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:var(--bg);color:var(--ink);font:inherit}select:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.section-links{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:20px 0;font-size:13px;color:var(--gold)}.section-links button{margin:0;padding:0;font:inherit}
+.security-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:26px 0}.security-stats>div{border:1px solid var(--line);padding:18px 12px;background:var(--bg)}.security-stats strong{display:block;font-size:28px;color:var(--gold)}.security-stats span{font-size:12px;color:var(--muted)}
+.security-list{display:grid;gap:10px}.security-item{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--line);padding:16px;min-width:0}.security-item>div{min-width:0}.security-item p{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.security-item .secondary{margin:0;white-space:nowrap}.security-item form{flex-shrink:0}
+.event-list{padding:0;list-style:none}.event-list li{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line);padding:12px 0;font-size:12px}.event-list time{color:var(--muted);text-align:right}
+.recovery-panel{border:1px solid var(--line);padding:18px;margin:24px 0}.recovery-panel h3{margin-top:0}#recovery-codes{list-style:none;padding:0;display:grid;gap:9px}#recovery-codes code{font-size:12px;overflow-wrap:anywhere;color:var(--gold)}.appearance-preview{border:1px solid var(--line);padding:20px;margin:24px 0}.appearance-preview h3{margin:12px 0}.appearance-preview p{color:var(--muted)}
+html[data-contrast=true]{--bg:#000;--panel:#000;--ink:#fff;--muted:#fff;--line:#aaa}
+html[data-contrast=true] body,html[data-contrast=true] .panel,html[data-contrast=true] .desktop-nav{background:#000!important;box-shadow:none!important}
+html[data-contrast=true] input,html[data-contrast=true] select{background:#000!important;color:#fff!important;border-color:#aaa!important}
+html[data-contrast=true] .secondary{background:#111;color:#fff;border-color:#aaa}
+html[data-motion=true] *,html[data-motion=true] *:before,html[data-motion=true] *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important;box-shadow:none!important}
+html[data-size=normal]{--reading:1}html[data-size=large]{--reading:1.15}html[data-size=largest]{--reading:1.3}
+html[data-size] body{font-size:calc(15px * var(--reading))}html[data-size] .intro,html[data-size] input,html[data-size] select,html[data-size] .prose{font-size:calc(14px * var(--reading))!important}
+html[data-size] label,html[data-size] button,html[data-size] .primary,html[data-size] .secondary,html[data-size] nav a,html[data-size] summary{font-size:calc(13px * var(--reading))!important}
+html[data-size] .hint,html[data-size] .security-note,html[data-size] .notice,html[data-size] .event-list li,html[data-size] .panel-bottom,html[data-size] .security-item p{font-size:calc(12px * var(--reading))!important}
+html[data-size] h2{font-size:calc(29px * var(--reading))!important}html[data-size] h3{font-size:calc(18px * var(--reading))!important}
+html.desktop .desktop-nav{overflow-y:auto}html.desktop .desktop-nav a{flex-shrink:0}.panel{min-width:0}
+@media(max-width:740px){.security-item{flex-wrap:wrap}.security-stats{gap:6px}.security-stats>div{padding:12px 8px}.event-list li{flex-direction:column;gap:4px}.event-list time{text-align:left}.recovery-panel{padding:12px}.section-links{gap:10px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.split #session-tools{grid-column:1/-1;margin:0}
+
+.panel-bottom{flex-wrap:wrap}

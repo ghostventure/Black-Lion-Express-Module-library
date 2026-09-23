@@ -1,4 +1,9 @@
 const params = new URLSearchParams(location.search);
+if (params.has('locked')) {
+  document.getElementById('title').textContent = 'LionMax is locked';
+  document.getElementById('message').textContent = 'Securing your session. Sign in again to continue.';
+  document.getElementById('progress').hidden = true;
+}
 if (params.has('error')) {
   document.getElementById('title').textContent = 'Let’s get LionMax running';
   document.getElementById('message').textContent = params.get('error');

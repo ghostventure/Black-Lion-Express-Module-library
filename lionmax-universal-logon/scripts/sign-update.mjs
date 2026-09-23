@@ -1,0 +1,11 @@
+import {readFileSync,writeFileSync,statSync,createReadStream} from 'node:fs';
+import {createHash,sign,createPublicKey} from 'node:crypto';
+import {join} from 'node:path';
+const version=JSON.parse(readFileSync('package.json')).version;
+const key=readFileSync(join(process.env.LOCALAPPDATA,'LionMax-Release','update-private.pem'));
+if(!createPublicKey(key).export({type:'spki',format:'der'}).equals(createPublicKey(readFileSync('desktop/update-key.pem')).export({type:'spki',format:'der'})))throw Error('Release signing key does not match the pinned public key');
+const name=`LionMax-Setup-${version}-win-x64.exe`,file=join('release','installer',name),hash=createHash('sha256');
+for await(const chunk of createReadStream(file))hash.update(chunk);
+const bytes=Buffer.from(JSON.stringify({version,url:`https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/download/lionmax-v${version}/${name}`,sha256:hash.digest('hex'),size:statSync(file).size,publishedAt:new Date().toISOString()}));
+writeFileSync('release/lionmax-update.json',JSON.stringify({payload:bytes.toString('base64'),signature:sign(null,bytes,key).toString('base64')},null,2));
+console.log('Signed update manifest for',version);
