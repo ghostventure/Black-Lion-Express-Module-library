@@ -2,7 +2,7 @@
 
 ![LionMax desktop account setup](docs/lionmax-desktop-setup.png)
 
-[Download LionMax Desktop 0.5.0 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.5.0)
+[Download LionMax Desktop 0.5.1 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.5.1)
 
 LionMax is a standalone identity service. A user signs in with a username, password and personal seven-character alphanumeric token. After five failed attempts the account locks for 15 minutes; the counter and lock persist through a restart. Token verification records the observed IP, time and outcome. The account screen groups attempts by exact IP for the last 90 days.
 
@@ -10,7 +10,7 @@ Another application can integrate LionMax through OpenID Connect Authorization C
 
 ## Run on Windows
 
-Use **LionMax-Setup-0.5.0-win-x64.exe** for a per-user installation with desktop/Start Menu shortcuts and an uninstaller, or extract the portable ZIP and run **LionMax.exe**. Version 0.3.1 includes verified application files, bounded crash recovery, daily verified SQLite snapshots, startup/error screens and a pinned Node runtime. See [hardening and recovery boundaries](docs/HARDENING.md). The current build is unsigned.
+Use **LionMax-Setup-0.5.1-win-x64.exe** for a per-user installation with desktop/Start Menu shortcuts and an uninstaller, or extract the portable ZIP and run **LionMax.exe**. Version 0.3.1 includes verified application files, bounded crash recovery, daily verified SQLite snapshots, startup/error screens and a pinned Node runtime. See [hardening and recovery boundaries](docs/HARDENING.md). The current build is unsigned.
 
 The account setup page includes Microsoft 365, Google Workspace and Slack identity connectors. Selections, verified linked accounts and saved proprietary website links persist in the user database. **Connections** shows whether a provider needs configuration, is ready, or has been linked. Custom OpenID Connect providers can be added through local configuration; proprietary software can also use LionMax as its OIDC sign-in provider. See [connector setup](docs/CONNECTORS.md). Provider registration and credentials are required before live connections work; saved website links alone do not enable single sign-on.
 
@@ -34,7 +34,7 @@ Accounts, sessions, signing keys and audit data live under `%LOCALAPPDATA%\LionM
 
 **Auto-lock** defaults to ten minutes of inactivity. Choose 1, 5, 10, 15 or 30 minutes in Security, or use Lock now. Idle expiry is enforced by the backend, including after restart; the desktop also revokes local sessions when Windows locks, sleeps or resumes. Sessions retain their existing maximum 30-minute lifetime even with activity. Device-lock events revoke local LionMax authorization state; they cannot lock unrelated external applications. The upgrade preserves accounts, connections and credentials; pre-upgrade sessions require a fresh sign-in.
 
-These additions use the existing SQLite database and local scripts, with no added runtime dependency or process. Version 0.5.0 also adds App launcher, the Connection setup wizard and signed, verified desktop updates. See [release details and updater maintenance](docs/RELEASE-0.5.0.md).
+These additions use the existing SQLite database and local scripts, with no added runtime dependency or process. Version 0.5.1 also adds App launcher, the Connection setup wizard and signed, verified desktop updates. See [release details and updater maintenance](docs/RELEASE-0.5.1.md).
 
 ## Develop and verify
 

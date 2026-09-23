@@ -17,7 +17,7 @@ try {
   await assert.rejects(fetch('http://127.0.0.1:4545/health'));
   const began = Date.now(); child = spawn(exe, [], { env, windowsHide: false, stdio: 'ignore' });
   let healthy = false;
-  for (let i = 0; i < 100; i++) { await delay(150); try { const health = await (await fetch('http://127.0.0.1:4545/health')).json(); if (health.version === '0.5.0') { healthy = true; break; } } catch {} }
+  for (let i = 0; i < 100; i++) { await delay(150); try { const health = await (await fetch('http://127.0.0.1:4545/health')).json(); if (health.version === '0.5.1') { healthy = true; break; } } catch {} }
   assert.ok(healthy, 'Hardened EXE did not start');
   const startupMs = Date.now() - began;
   const sample = () => JSON.parse(execFileSync('powershell.exe', ['-NoProfile', '-Command', '$items=@(Get-Process | Where-Object { $_.Path -and $_.Path.StartsWith($env:LIONMAX_METRICS_ROOT,[StringComparison]::OrdinalIgnoreCase) }); [pscustomobject]@{Processes=$items.Count;CPUSeconds=($items | Measure-Object CPU -Sum).Sum;WorkingSetMB=[math]::Round(($items | Measure-Object WorkingSet64 -Sum).Sum/1MB,1)} | ConvertTo-Json -Compress'], { env: { ...process.env, LIONMAX_METRICS_ROOT: root }, encoding: 'utf8', windowsHide: true }));

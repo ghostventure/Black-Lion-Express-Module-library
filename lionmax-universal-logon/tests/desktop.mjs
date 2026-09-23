@@ -52,7 +52,9 @@ try {
   await page.getByRole('navigation').getByRole('link', {name:'App launcher',exact:true}).click();
   await page.getByRole('link', {name:/Open Company Portal/}).waitFor();
   await page.getByRole('navigation').getByRole('link', {name:'Updates',exact:true}).click();
-  await page.getByText('Installed: 0.5.0',{exact:true}).waitFor();
+  await page.getByText('Installed: 0.5.1',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Download update',includeHidden:true}).isVisible(),false);
+  assert.equal(await page.getByRole('button',{name:'Install verified update',includeHidden:true}).isVisible(),false);
   assert.equal(await page.getByRole('button',{name:'Check now'}).isEnabled(),true);
   await page.getByLabel('Check and download verified updates automatically (once daily)').uncheck();
   await page.reload();assert.equal(await page.getByLabel('Check and download verified updates automatically (once daily)').isChecked(),false);
