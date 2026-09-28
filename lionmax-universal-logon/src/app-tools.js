@@ -11,11 +11,13 @@ export class AppTools {
   const clientId=String(body.clientId||'').trim(),settings={clientId};
   if(provider==='microsoft'){if(!guid.test(clientId)||!guid.test(body.tenantId||''))throw Error('Enter the application client ID and organization tenant ID from Microsoft as GUIDs.');settings.tenantId=body.tenantId.toLowerCase();}
   if(provider==='google'&&!/^[a-zA-Z0-9._-]{8,200}\.apps\.googleusercontent\.com$/.test(clientId))throw Error('Enter the Google Desktop app client ID ending in .apps.googleusercontent.com.');
+  if(provider==='google' && body.clientSecretEnv){if(!/^[A-Z][A-Z0-9_]{0,79}$/.test(body.clientSecretEnv))throw Error('Use an environment variable name for the Google client secret.');settings.clientSecretEnv=body.clientSecretEnv;}
   if(provider==='slack'){
    if(!/^\d+\.\d+$/.test(clientId))throw Error('Enter the Slack client ID from your app registration.');
    const url=new URL(httpsUrl(String(body.callbackOrigin||'')));if(url.origin!==url.href.replace(/\/$/,''))throw Error('Enter an HTTPS callback origin without a path.');
    settings.callbackOrigin=url.origin;settings.clientSecretEnv='LIONMAX_SLACK_CLIENT_SECRET';
   }
+  if(JSON.stringify(this.settings(id,provider))===JSON.stringify(settings))return;
   this.db.exec('BEGIN IMMEDIATE');try{this.db.prepare('INSERT INTO connector_settings VALUES(?,?,?) ON CONFLICT(user_id,provider) DO UPDATE SET settings=excluded.settings').run(id,provider,JSON.stringify(settings));this.connections.unlink(id,provider);this.store.audit('connector.configured',id);this.db.exec('COMMIT');}catch(error){this.db.exec('ROLLBACK');throw error;}
  }
  cards(id){

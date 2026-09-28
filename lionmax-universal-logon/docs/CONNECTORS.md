@@ -8,6 +8,14 @@ Choose office connections during account creation, save the personal token, then
 
 Saved websites are per-user HTTPS bookmarks with manual sign-in. A registered website using LionMax OIDC appears under **Websites using your LionMax identity** once the user consents. Users can revoke those LionMax grants. Existing sessions issued by the other website may remain until expiry.
 
+## Plug-and-play setup profiles
+
+Open **Connections ? Connector setup** after signing in. Each provider shows your current account's setup status. Choose **Import a setup profile**, load a LionMax JSON file supplied by your administrator, review it and confirm your LionMax credentials. You can download a blank provider template from the same screen. Settings take effect immediately without a restart. Saving identical settings preserves a linked identity; changing them disconnects it and invalidates pending approvals.
+
+Profiles use `{"version":1,"provider":"google","settings":{"clientId":"YOUR-CLIENT-ID.apps.googleusercontent.com"}}`. Microsoft settings contain `clientId` and `tenantId`; Slack settings contain `clientId` and `callbackOrigin`. Google optionally accepts `clientSecretEnv`, the name of a service environment variable, never the secret itself. Unknown fields and profiles for a different provider are rejected. Profiles do not create registrations or provide provider consent. Only import configuration from your organization or your own provider registration.
+
+**Test provider connection** checks the fixed provider signing-key endpoint. **Connect** opens provider approval; only a completed, verified callback marks the account Connected. Slack additionally requires its configured server secret and HTTPS callback. Environment changes require restarting the service.
+
 ## Administrator configuration
 
 Copy `plugins.example.json` to `%LOCALAPPDATA%\LionMax\data\plugins.json` (or the configured `LIONMAX_DATA_DIR`). Alternatively, set `LIONMAX_PLUGINS_FILE` to a private configuration file. Fill in only providers you intend to enable, and restart LionMax. Empty client IDs leave connectors visibly unconfigured. This file is outside the program folder and survives rebuilds.

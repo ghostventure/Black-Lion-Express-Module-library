@@ -1,6 +1,6 @@
 import { _electron as electron } from 'playwright';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 const executablePath = resolve('artifacts/desktop-test/LionMax-win32-x64/LionMax.exe');
@@ -52,7 +52,7 @@ try {
   await page.getByRole('navigation').getByRole('link', {name:'App launcher',exact:true}).click();
   await page.getByRole('link', {name:/Open Company Portal/}).waitFor();
   await page.getByRole('navigation').getByRole('link', {name:'Updates',exact:true}).click();
-  await page.getByText('Installed: 0.5.1',{exact:true}).waitFor();
+  await page.getByText('Installed: '+JSON.parse(readFileSync('package.json')).version,{exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Download update',includeHidden:true}).isVisible(),false);
   assert.equal(await page.getByRole('button',{name:'Install verified update',includeHidden:true}).isVisible(),false);
   assert.equal(await page.getByRole('button',{name:'Check now'}).isEnabled(),true);

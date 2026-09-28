@@ -29,3 +29,4 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .saved-site > div { min-width: 120px; }
 .connection-toolbar > a { flex-shrink: 0; }
 @media(max-width:720px) { .plugin-grid { grid-template-columns: 1fr; } .connection-card { flex-wrap: wrap; } .saved-site { flex-wrap: wrap; } }
+.connection-card > .button-link { width: auto; flex: 0 0 auto; margin: 0; }

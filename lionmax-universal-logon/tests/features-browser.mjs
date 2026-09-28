@@ -21,6 +21,20 @@ try {
  await page.screenshot({path:'artifacts/lionmax-launcher.png',fullPage:true});
  await page.goto(origin+'/connections/setup/google');await page.getByLabel('Client ID',{exact:true}).fill('12345678-test.apps.googleusercontent.com');await page.getByLabel('Current LionMax password',{exact:true}).fill(password);await page.getByLabel('Current personal token',{exact:true}).fill(token);await page.getByRole('button',{name:'Save configuration'}).click();await page.getByText('Configuration saved for your account. Continue with Test and connect.').waitFor();
  assert.equal(await page.getByRole('button',{name:'Test provider connection'}).isEnabled(),true);await page.screenshot({path:'artifacts/lionmax-connection-wizard.png',fullPage:true});
+ await page.goto(origin+'/connections/setup');assert.match(await page.locator('.launcher-card').filter({hasText:'Google Workspace'}).innerText(),/Ready to connect/);
+ await page.goto(origin+'/connections/setup/google');await page.getByText('Import a setup profile',{exact:true}).click();
+ const profile=JSON.stringify({version:1,provider:'google',settings:{clientId:'87654321-import.apps.googleusercontent.com'}});
+ await page.locator('#profile-file').setInputFiles({name:'google-setup.json',mimeType:'application/json',buffer:Buffer.from(profile)});
+ await page.getByText('Profile loaded for review.',{exact:false}).waitFor();
+ await page.getByLabel('Confirm LionMax password',{exact:true}).fill(password);await page.getByLabel('Confirm personal token',{exact:true}).fill(token);await page.getByRole('button',{name:'Apply setup profile'}).click();
+ await page.getByText('Configuration saved for your account. Continue with Test and connect.').waitFor();assert.equal(await page.getByLabel('Client ID',{exact:true}).inputValue(),'87654321-import.apps.googleusercontent.com');
+ const template=await context.request.get(origin+'/connections/setup/google/template');assert.equal((await template.json()).provider,'google');
+ const deniedProfile=await context.request.post(origin+'/connections/setup/google/save',{headers:{Origin:origin},form:{csrf:'wrong',profile,password,token}});assert.equal(deniedProfile.status(),403);
+ await page.getByRole('button',{name:'Connect Google Workspace',exact:true}).click();const authURL=new URL(await page.getByRole('link',{name:'Continue to Google Workspace'}).getAttribute('href'));assert.equal(authURL.searchParams.get('client_id'),'87654321-import.apps.googleusercontent.com');assert.equal(authURL.searchParams.get('code_challenge_method'),'S256');
+ await page.goto(origin+'/connections');assert.equal(await page.getByRole('link',{name:'Set up Microsoft 365',exact:true}).isVisible(),true);
+ assert.ok(await page.locator('.connection-copy').first().evaluate(el=>el.getBoundingClientRect().width>150));
+ for(const width of [390,1280]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+ await page.screenshot({path:'artifacts/lionmax-connection-ready.png',fullPage:true});
  await page.goto(origin+'/updates');await page.getByRole('heading',{name:'Verified updates'}).waitFor();assert.equal(await page.getByRole('button',{name:'Check now'}).isDisabled(),true);
  await page.goto(origin+'/security');await page.getByRole('heading',{name:'Security dashboard',exact:true}).waitFor();mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/lionmax-security-dashboard.png',fullPage:true});
  const secondContext=await browser.newContext();const second=await secondContext.newPage();await signin(second);await page.reload();await page.getByRole('button',{name:'Revoke session',exact:true}).click();assert.equal((await secondContext.request.get(origin+'/api/session')).status(),401);await second.goto(origin+'/connections/unknown/callback');await second.getByRole('heading',{name:'Connection not completed',exact:true}).waitFor();await new Promise(r=>setTimeout(r,500));assert.ok(second.url().endsWith('/connections/unknown/callback'));

@@ -1,14 +1,16 @@
+import {parseProfile,profileTemplate} from './connection-profile.js';
 import {launcherPage,wizardIndex,wizardPage,updatesPage} from './app-tools-ui.js';
 import {testProvider} from './app-tools.js';
 export function installAppTools(app,{tools,store,connections,form,csrf,checkForm,signedIn,limited,catalog}){
  const launcher=(req,res,message='',status=200)=>res.status(status).send(launcherPage(tools.cards(req.user.id),csrf(req,res),message));
  app.get('/launcher',signedIn,(req,res)=>launcher(req,res));
  for(const [path,action] of Object.entries({pin:req=>tools.pin(req.user.id,req.body.id),add:req=>connections.addWebsite(req.user.id,req.body.name,req.body.url),edit:req=>tools.updateWebsite(req.user.id,req.body.id,req.body.name,req.body.url),remove:req=>connections.removeWebsite(req.user.id,req.body.id)}))app.post('/launcher/'+path,form,checkForm,signedIn,(req,res)=>{try{action(req);res.redirect(303,'/launcher');}catch(error){launcher(req,res,error.message,400);}});
- app.get('/connections/setup',(_req,res)=>res.send(wizardIndex(catalog)));
+ app.get('/connections/setup',signedIn,(req,res)=>res.send(wizardIndex(tools.plugins(req.user.id),connections.identities(req.user.id))));
+ app.get('/connections/setup/:provider/template',signedIn,(req,res)=>{try{const profile=profileTemplate(req.params.provider);res.attachment('lionmax-'+profile.provider+'-setup.json').json(profile);}catch{res.sendStatus(404);}});
  const wizard=(req,res,message='',status=200,tested=false)=>{const plugin=tools.plugins(req.user.id).find(p=>p.id===req.params.provider&&['microsoft','google','slack'].includes(p.id));if(!plugin)return res.sendStatus(404);res.status(status).send(wizardPage(plugin,tools.settings(req.user.id,plugin.id),csrf(req,res),message,tested));};
  app.get('/connections/setup/:provider',signedIn,(req,res)=>wizard(req,res));
  app.post('/connections/setup/:provider/save',form,checkForm,signedIn,limited,async(req,res)=>{
-  try{const verified=await store.authenticate(req.user.username,req.body.password,req.body.token,req.ip);if(!verified.ok||!store.session(req.cookies.lionmax_session))throw Error('Credentials not accepted. Sign in again if your session expired.');tools.save(req.user.id,req.params.provider,req.body);wizard(req,res,'Configuration saved for your account. Continue with Test and connect.');}
+  try{const verified=await store.authenticate(req.user.username,req.body.password,req.body.token,req.ip);if(!verified.ok||!store.session(req.cookies.lionmax_session))throw Error('Credentials not accepted. Sign in again if your session expired.');const settings=req.body.profile?parseProfile(req.body.profile,req.params.provider):req.body;tools.save(req.user.id,req.params.provider,settings);wizard(req,res,'Configuration saved for your account. Continue with Test and connect.');}
   catch(error){if(error.status)throw error;wizard(req,res,error.message,400);}
  });
  app.post('/connections/setup/:provider/test',form,checkForm,signedIn,async(req,res)=>{

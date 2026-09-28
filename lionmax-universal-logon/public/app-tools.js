@@ -7,3 +7,14 @@ if(document.getElementById('update-panel')&&window.lionmaxUpdates){
  auto.addEventListener('change',()=>run(()=>api.automatic(auto.checked)));check.addEventListener('click',()=>run(()=>api.check()));download.addEventListener('click',()=>run(()=>api.download()));install.addEventListener('click',()=>run(()=>api.install()));
  run(()=>api.status());setInterval(()=>api.status().then(render).catch(()=>{}),2000);
 }
+
+const profileFile=document.getElementById('profile-file');
+profileFile?.addEventListener('change',async()=>{
+ const status=document.getElementById('profile-status'),contents=document.getElementById('profile');contents.value='';
+ const file=profileFile.files[0];if(!file)return;
+ if(file.size>4096){status.textContent='Choose a setup profile smaller than 4 KB.';return;}
+ try{const text=await file.text();JSON.parse(text);contents.value=text;status.textContent='Profile loaded for review. Confirm your LionMax credentials to apply it.';}catch{status.textContent='This file is not valid JSON.';}
+});
+document.getElementById('copy-callback')?.addEventListener('click',async()=>{
+ const status=document.getElementById('copy-status');try{await navigator.clipboard.writeText(document.querySelector('.callback-url').textContent);status.textContent='Callback copied.';}catch{status.textContent='Select the callback URL above and copy it manually.';}
+});
