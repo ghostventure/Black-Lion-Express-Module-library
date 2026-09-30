@@ -2,6 +2,7 @@ import { installSecurity } from './security-routes.js';
 import { healthProof, requireHost, maintain } from './reliability.js';
 import { installConnections } from './connections-routes.js';
 import express from 'express';
+import packageInfo from '../package.json' with { type: 'json' };
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
@@ -44,7 +45,7 @@ function signedIn(req,res,next){req.user=store.session(req.cookies.lionmax_sessi
 const {connections,catalog,ids:pluginIds}=installConnections(app,{store,dataDir,issuer,form,csrf,checkForm,signedIn,limited});
 installSecurity(app,{store,connections,form,csrf,checkForm,signedIn,limited,cookie});
 const failure='Credentials not accepted. Check all three fields. After five failed attempts, wait 15 minutes before trying again.';
-app.get('/health',(req,res)=>{healthProof(req,res);store.db.prepare('SELECT 1').get();res.json({status:'ok',service:'LionMax Universal Logon',version:'0.5.3'});});
+app.get('/health',(req,res)=>{healthProof(req,res);store.db.prepare('SELECT 1').get();res.json({status:'ok',service:'LionMax Universal Logon',version:packageInfo.version});});
 app.get('/',(req,res)=>res.redirect(store.session(req.cookies.lionmax_session)?'/account':'/login'));
 app.get('/login',(req,res)=>res.send(view.login({csrf:csrf(req,res)})));
 app.post('/login',form,checkForm,limited,async(req,res)=>{const result=await store.authenticate(req.body.username,req.body.password,req.body.token,req.ip);if(!result.ok)return res.status(401).send(view.login({csrf:csrf(req,res),error:failure}));store.logout(req.cookies.lionmax_session);res.cookie('lionmax_session',store.createSession(result.user.id,req.ip,req.get('user-agent')),{...cookie,maxAge:30*60_000});res.redirect(303,'/account');});
