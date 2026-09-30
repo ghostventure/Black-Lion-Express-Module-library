@@ -1,6 +1,6 @@
 {
   "name": "lionmax-universal-logon",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,7 +11,7 @@
     "build:desktop": "node scripts/build-desktop.mjs",
     "start": "node src/server.js",
     "demo": "node examples/demo-app.js",
-    "test": "node --test tests/core.test.js tests/connections.test.js tests/reliability.test.js tests/security.test.js tests/updater.test.js tests/app-tools.test.js",
+    "test": "node --test tests/core.test.js tests/connections.test.js tests/reliability.test.js tests/security.test.js tests/updater.test.js tests/app-tools.test.js tests/compatibility.test.js",
     "test:desktop": "node tests/desktop.mjs",
     "test:browser": "node tests/browser.mjs",
     "client:add": "node scripts/client-add.js",

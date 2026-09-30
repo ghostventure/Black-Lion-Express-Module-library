@@ -1,5 +1,5 @@
 import {parseProfile,profileTemplate} from './connection-profile.js';
-import {launcherPage,wizardIndex,wizardPage,updatesPage} from './app-tools-ui.js';
+import {launcherPage,wizardIndex,wizardPage,updatesPage,compatibilityPage} from './app-tools-ui.js';
 import {testProvider} from './app-tools.js';
 export function installAppTools(app,{tools,store,connections,form,csrf,checkForm,signedIn,limited,catalog}){
  const launcher=(req,res,message='',status=200)=>res.status(status).send(launcherPage(tools.cards(req.user.id),csrf(req,res),message));
@@ -18,5 +18,6 @@ export function installAppTools(app,{tools,store,connections,form,csrf,checkForm
   try{const message=await testProvider(tools.plugins(req.user.id).find(p=>p.id===req.params.provider));wizard(req,res,message,200,true);}
   catch{wizard(req,res,'The provider test did not pass. Check the registration fields, required administrator setup, and your Internet connection. This test does not link an account.',400);}
  });
+ app.get('/compatibility',(_req,res)=>res.send(compatibilityPage()));
  app.get('/updates',(_req,res)=>res.send(updatesPage()));
 }

@@ -2,7 +2,7 @@
 
 ![LionMax desktop account setup](docs/lionmax-desktop-setup.png)
 
-[Download LionMax Desktop 0.5.3 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.5.3)
+[Download LionMax Desktop 0.6.0 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.6.0)
 
 LionMax is a standalone identity service. A user signs in with a username, password and personal seven-character alphanumeric token. After five failed attempts the account locks for 15 minutes; the counter and lock persist through a restart. Token verification records the observed IP, time and outcome. The account screen groups attempts by exact IP for the last 90 days.
 
@@ -10,7 +10,7 @@ Another application can integrate LionMax through OpenID Connect Authorization C
 
 ## Run on Windows
 
-Use **LionMax-Setup-0.5.3-win-x64.exe** for a per-user installation with desktop/Start Menu shortcuts and an uninstaller, or extract the portable ZIP and run **LionMax.exe**. Version 0.3.1 includes verified application files, bounded crash recovery, daily verified SQLite snapshots, startup/error screens and a pinned Node runtime. See [hardening and recovery boundaries](docs/HARDENING.md). The current build is unsigned.
+Use **LionMax-Setup-0.6.0-win-x64.exe** for a per-user installation with desktop/Start Menu shortcuts and an uninstaller, or extract the portable ZIP and run **LionMax.exe**. Version 0.3.1 includes verified application files, bounded crash recovery, daily verified SQLite snapshots, startup/error screens and a pinned Node runtime. See [hardening and recovery boundaries](docs/HARDENING.md). The current build is unsigned.
 
 The account setup page includes Microsoft 365, Google Workspace and Slack identity connectors. Selections, verified linked accounts and saved proprietary website links persist in the user database. **Connections** shows whether a provider needs configuration, is ready, or has been linked. Custom OpenID Connect providers can be added through local configuration; proprietary software can also use LionMax as its OIDC sign-in provider. See [connector setup](docs/CONNECTORS.md). Provider registration and credentials are required before live connections work; saved website links alone do not enable single sign-on.
 
@@ -34,7 +34,7 @@ Accounts, sessions, signing keys and audit data live under `%LOCALAPPDATA%\LionM
 
 **Auto-lock** defaults to ten minutes of inactivity. Choose 1, 5, 10, 15 or 30 minutes in Security, or use Lock now. Idle expiry is enforced by the backend, including after restart; the desktop also revokes local sessions when Windows locks, sleeps or resumes. Sessions retain their existing maximum 30-minute lifetime even with activity. Device-lock events revoke local LionMax authorization state; they cannot lock unrelated external applications. The upgrade preserves accounts, connections and credentials; pre-upgrade sessions require a fresh sign-in.
 
-These additions use the existing SQLite database and local scripts, with no added runtime dependency or process. Version 0.5.3 also adds App launcher, the Connection setup wizard and signed, verified desktop updates. See [release details and updater maintenance](docs/RELEASE-0.5.3.md).
+These additions use the existing SQLite database and local scripts, with no added runtime dependency or process. Version 0.6.0 also adds App launcher, the Connection setup wizard and signed, verified desktop updates. See [release details and updater maintenance](docs/RELEASE-0.6.0.md).
 
 ## Develop and verify
 
@@ -59,3 +59,11 @@ The Northstar demo in `examples/demo-app.js` shows the integration in code. Ever
 This build is verified as a local prototype. A real Internet-facing identity service needs a stable HTTPS domain, TLS termination, secure reverse-proxy configuration, monitored encrypted backups, account recovery, a privacy/contact policy, operational monitoring, and an independent security review. Set `NODE_ENV=production`, `LIONMAX_ISSUER=https://your-domain`, `LIONMAX_BIND` and `LIONMAX_TRUST_PROXY` for that environment, and register the actual callback URLs. The local launcher is for loopback use. Never put the SQLite database or signing keys on a public web root.
 
 The seven-character code is reusable and can be phished or copied. It is an additional secret, not phishing-resistant multifactor authentication. Five-attempt lockout and connection throttling reduce online guessing; they do not protect a stolen password and token together. IP addresses identify connections, not exact physical locations; proxies and shared networks can make several users appear under one IP.
+
+## Compatibility and automatic updates
+
+Open **Compatibility** in the desktop navigation to check Windows, architecture, memory, writable folders, and free disk space. This release requires x64 Windows 10 build 19041 or later; 4 GB RAM is recommended. Updates require at least 2 GB free space on the download and installation volumes. Low memory and ARM emulation are warnings, not certification of those environments. The Windows installer checks the OS before changing files.
+
+**Updates** checks for signed releases daily and retries failed checks after 15 minutes. Downloads resume after interruptions when the server supports ranges; the complete installer is hashed before use. Verified downloads survive restarts and are checked again before installation.
+
+Automatic checking/downloading and installation on normal app exit are enabled by default, with separate switches on Updates. Existing disabled automatic-check preferences are preserved. Silent installation on exit applies only to managed Windows installations. Portable copies use **Install verified update**, which opens Windows setup; their original folders are not replaced. Automatic installation is skipped during Windows shutdown/restart. No update interrupts an active app session.

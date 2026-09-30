@@ -51,6 +51,13 @@ try {
   assert.equal(rejected.status(), 403);
   await page.getByRole('navigation').getByRole('link', {name:'App launcher',exact:true}).click();
   await page.getByRole('link', {name:/Open Company Portal/}).waitFor();
+  assert.equal(await page.evaluate(() => typeof window.lionmaxCompatibility), 'undefined');
+  await page.getByRole('navigation').getByRole('link', {name:'Compatibility',exact:true}).click();
+  await page.getByText('This device meets the requirements for LionMax updates.', {exact:true}).waitFor();
+  assert.ok(await page.locator('.compatibility-result').count() >= 7);
+  await page.getByRole('button', {name:'Run compatibility check'}).click();
+  await page.getByText('This device meets the requirements for LionMax updates.', {exact:true}).waitFor();
+  await page.screenshot({path:'artifacts/lionmax-desktop-compatibility.png',fullPage:true});
   await page.getByRole('navigation').getByRole('link', {name:'Updates',exact:true}).click();
   await page.getByText('Installed: '+JSON.parse(readFileSync('package.json')).version,{exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Download update',includeHidden:true}).isVisible(),false);
@@ -59,6 +66,9 @@ try {
   await page.getByLabel('Check and download verified updates automatically (once daily)').uncheck();
   await page.reload();assert.equal(await page.getByLabel('Check and download verified updates automatically (once daily)').isChecked(),false);
   await page.getByLabel('Check and download verified updates automatically (once daily)').check();
+  await page.getByLabel('Install verified updates automatically when I close LionMax').uncheck();
+  await page.reload();assert.equal(await page.getByLabel('Install verified updates automatically when I close LionMax').isChecked(),false);
+  await page.getByLabel('Install verified updates automatically when I close LionMax').check();
   await page.screenshot({path:'artifacts/lionmax-desktop-updates.png',fullPage:true});
   await app.close(); app = null;
   await new Promise(r => setTimeout(r, 1200));
@@ -99,4 +109,4 @@ try {
   await second.getByRole('button', {name:'Reset to defaults'}).click();
   writeFileSync('artifacts/desktop-verification.json', JSON.stringify({ passed: true, checks: ['packaged EXE startup', 'desktop navigation', 'sandboxed renderer', 'registration and login with external renderer requests blocked', 'owned service shutdown', 'account persists after restart','Windows lock and sleep event handlers revoke backend sessions','large-text desktop layout','appearance survives lock'] }, null, 2));
   console.log('PASS: packaged desktop registration, persistence, security dashboard, Windows lock/sleep handlers, and accessibility');
-} finally { await app?.close(); }
+} catch (error) { if(app) { const page = await app.firstWindow(); console.error(page.url(), await page.locator('body').innerText()); await page.screenshot({path:'artifacts/desktop-failure.png'}); } throw error; } finally { await app?.close(); }

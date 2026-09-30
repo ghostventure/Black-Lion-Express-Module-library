@@ -1,8 +1,15 @@
 {
   "appId": "com.lionmax.desktop",
   "productName": "LionMax",
-  "directories": { "output": "release/installer" },
-  "win": { "target": "nsis", "executableName": "LionMax", "icon": "desktop/icon.ico", "signAndEditExecutable": false },
+  "directories": {
+    "output": "release/installer"
+  },
+  "win": {
+    "target": "nsis",
+    "executableName": "LionMax",
+    "icon": "desktop/icon.ico",
+    "signAndEditExecutable": false
+  },
   "nsis": {
     "artifactName": "LionMax-Setup-${version}-win-x64.exe",
     "oneClick": false,
@@ -13,7 +20,8 @@
     "createStartMenuShortcut": true,
     "shortcutName": "LionMax",
     "deleteAppDataOnUninstall": false,
-    "runAfterFinish": true
+    "runAfterFinish": true,
+    "include": "desktop/installer.nsh"
   },
   "publish": null
 }

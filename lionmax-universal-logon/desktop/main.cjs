@@ -1,5 +1,6 @@
 const { app, BrowserWindow, session, nativeTheme, ipcMain, shell, screen, protocol, powerMonitor } = require('electron');
-const { join } = require('node:path');
+const { join, dirname } = require('node:path');
+const { checkCompatibility } = require('./compatibility.cjs');
 const { pathToFileURL } = require('node:url');
 const { mkdirSync, readFileSync, writeFileSync, renameSync, existsSync, statSync, appendFileSync } = require('node:fs');
 const { verifyFiles } = require('./integrity.cjs');
@@ -8,13 +9,14 @@ const { Supervisor } = require('./supervisor.cjs');
 nativeTheme.themeSource = 'dark';
 protocol.registerSchemesAsPrivileged([{scheme:'lionmax',privileges:{standard:true,secure:true,supportFetchAPI:true}}]);
 const { Updater } = require('./updater.cjs');
-let updater;
+let updater, windowsShutdown = false;
 const release = app.isPackaged && !require('./package.json').lionmaxTestBuild;
 // One namespace per Windows user, independent of install path, version or CLI profile.
 app.setName('LionMax');
 app.setPath('userData', join(app.getPath('appData'), 'LionMax'));
 const root = app.isPackaged ? join(process.resourcesPath, 'service') : join(__dirname, '..');
 const logs = join(process.env.LOCALAPPDATA, 'LionMax');
+const updateDirectory = release ? join(logs, 'updates') : join(process.env.LIONMAX_DATA_DIR || logs, 'test-updates');
 const statusURL = 'lionmax://app/status.html';
 const allowed = value => { try { return ['http://127.0.0.1:4545', 'http://127.0.0.1:4546'].includes(new URL(value).origin); } catch { return false; } };
 let window, supervisor, monitor, integrityTimer, integrityChecking = false, integrityBlocked = false, closing = false, busy = false, retries = [], healthFailures = 0;
@@ -70,6 +72,7 @@ async function boot() {
  busy = true; stopMonitors(); const start = Date.now();
  try {
   await status(); await supervisor?.stop();
+  if (updater) { const result = await updater.refreshCompatibility(); if (!result.compatibility.canRun) throw Error(result.compatibility.checks.filter(c => c.scope === 'run' && c.state === 'fail').map(c => c.detail).join(' ')); }
   if (app.isPackaged) await verifyFiles(root, require('./service-integrity.json'));
   integrityBlocked = false;
   supervisor = new Supervisor({ root, logs, runtime: app.isPackaged ? join(root, 'runtime', 'node.exe') : 'node', onFailure: reason => recover(reason).catch(() => {}) });
@@ -92,12 +95,13 @@ else {
  ipcMain.handle('lionmax:retry', async event => { if (!trusted(event, true)) throw Error('Untrusted request'); await integrityShutdown; retries = []; await boot(); });
  ipcMain.handle('lionmax:logs', async event => { if (!trusted(event, true)) throw Error('Untrusted request'); mkdirSync(logs, { recursive: true }); await shell.openPath(logs); });
  ipcMain.handle('lionmax:update', async (event, action, value) => {
-  if (!trusted(event) || new URL(event.senderFrame.url).pathname !== '/updates' || integrityBlocked || !updater || !['status','check','download','install','automatic'].includes(action)) throw Error('Untrusted update request');
-  return updater[action](value);
+  if (!trusted(event) || new URL(event.senderFrame.url).pathname !== '/updates' || integrityBlocked || !updater || !['status','check','download','install','automatic','installOnExit'].includes(action)) throw Error('Untrusted update request');
+  return action === 'install' ? updater.install() : updater[action](value);
  });
+ ipcMain.handle('lionmax:compatibility', async event => { if (!trusted(event) || new URL(event.senderFrame.url).pathname !== '/compatibility' || integrityBlocked || !updater) throw Error('Untrusted compatibility request'); return (await updater.refreshCompatibility()).compatibility; });
  app.on('second-instance', () => { log('second-instance'); if (window && !window.isDestroyed()) { if (window.isMinimized()) window.restore(); window.show(); window.focus(); } });
  app.on('window-all-closed', () => app.quit());
- app.on('before-quit', event => { if (closing) return; event.preventDefault(); closing = true; stopMonitors(); if (supervisor) supervisor.stop().finally(() => app.exit(0)); else app.exit(0); });
+ app.on('before-quit', event => { if (closing) return; event.preventDefault(); closing = true; stopMonitors(); (async () => { await updater?.stop(); await supervisor?.stop(); if (release && !integrityBlocked && !windowsShutdown) await updater?.applyOnExit(); })().catch(error => log('update-on-exit-failed', error.code || error.name)).finally(() => app.exit(0)); });
  app.whenReady().then(async () => {
   powerMonitor.on('lock-screen', () => lockDesktop().catch(() => app.quit()));
   powerMonitor.on('suspend', () => lockDesktop().catch(() => app.quit()));
@@ -107,6 +111,8 @@ else {
   const stateFile = join(app.getPath('userData'), 'window-state.json'); let bounds = { width: 1180, height: 860 };
   try { const s = JSON.parse(readFileSync(stateFile)); if (Number.isFinite(s.x) && Number.isFinite(s.y) && s.width >= 640 && s.height >= 600 && screen.getAllDisplays().some(d => s.x < d.workArea.x + d.workArea.width && s.x + s.width > d.workArea.x && s.y < d.workArea.y + d.workArea.height && s.y + s.height > d.workArea.y)) bounds = { x: s.x, y: s.y, width: Math.min(s.width, 3840), height: Math.min(s.height, 2160) }; } catch {}
   window = new BrowserWindow({ title: 'LionMax', ...bounds, minWidth: 640, minHeight: 600, backgroundColor: '#080b14', autoHideMenuBar: true, show: false, webPreferences: { preload: join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, devTools: !release } });
+  window.on('query-session-end', () => { windowsShutdown = true; });
+  window.on('session-end', () => { windowsShutdown = true; });
   window.removeMenu(); window.once('ready-to-show', () => window.show());
   window.on('close', () => { try { mkdirSync(app.getPath('userData'), { recursive: true }); writeFileSync(stateFile + '.tmp', JSON.stringify(window.getNormalBounds())); renameSync(stateFile + '.tmp', stateFile); } catch {} });
   window.webContents.on('dom-ready', () => { if (window.webContents.getURL().startsWith('http://127.0.0.1:4545/')) window.webContents.insertCSS(readFileSync(join(__dirname, 'desktop.css'), 'utf8')).catch(() => {}); });
@@ -119,8 +125,17 @@ else {
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' })); window.webContents.on('will-attach-webview', event => event.preventDefault());
   window.webContents.on('render-process-gone', (_event, details) => { if (!closing) recover(`Interface process ${details.reason}`).catch(() => {}); });
   window.on('unresponsive', () => { if (!closing) { log('interface-unresponsive'); window.webContents.forcefullyCrashRenderer(); } });
-  updater = new Updater({ directory: join(logs, 'updates'), key: readFileSync(join(__dirname, 'update-key.pem')), currentVersion: require('./package.json').version, launch: file => new Promise((resolve, reject) => { const child = require('node:child_process').spawn(file, [], { detached: true, stdio: 'ignore', shell: false }); child.once('error', reject); child.once('spawn', () => { child.unref(); resolve(); app.quit(); }); }) });
+  updater = new Updater({
+   directory: updateDirectory, key: readFileSync(join(__dirname, 'update-key.pem')),
+   currentVersion: app.isPackaged ? require('./package.json').version : require('../package.json').version,
+   compatibility: target => checkCompatibility({ dataDirectory: process.env.LIONMAX_DATA_DIR || join(logs, 'data'), updateDirectory, installDirectory: dirname(process.execPath), installed: existsSync(join(dirname(process.execPath), 'Uninstall LionMax.exe')), target }),
+   launch: (file, { onExit = false } = {}) => new Promise((resolve, reject) => {
+    const child = require('node:child_process').spawn(file, onExit ? ['/S', '--updated'] : ['--updated'], { detached: true, stdio: 'ignore', windowsHide: onExit, shell: false });
+    child.once('error', reject); child.once('spawn', () => { child.unref(); resolve(); if (!onExit) app.quit(); });
+   })
+  });
+  await updater.restore();
   await boot();
-  if (release) { setTimeout(() => updater.background().catch(() => {}), 15000).unref(); setInterval(() => updater.background().catch(() => {}), 3600000).unref(); }
+  if (release) { setTimeout(() => updater.background().catch(() => {}), 15000).unref(); setInterval(() => updater.background().catch(() => {}), 900000).unref(); }
  }).catch(error => { log('desktop-fatal', error.code || error.name); app.quit(); });
 }
