@@ -6,6 +6,7 @@ const GiB = 1024 ** 3;
 const requirements = Object.freeze({ platform: 'win32', arch: 'x64', minWindowsBuild: 19041, recommendedMemoryBytes: 4 * GiB, updateFreeBytes: 2 * GiB });
 
 function evaluate(system, target = requirements) {
+  target = target || requirements;
   const checks = [];
   const add = (id, label, state, detail, scope = 'run') => checks.push({ id, label, state, detail, scope });
   const build = Number(String(system.release).split('.')[2]);

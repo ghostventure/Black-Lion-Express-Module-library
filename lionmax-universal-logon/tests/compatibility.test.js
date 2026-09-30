@@ -4,6 +4,7 @@ import compatibility from '../desktop/compatibility.cjs';
 const healthy = { platform: 'win32', arch: 'x64', release: '10.0.26100', machine: 'x86_64', memory: 8 * 1024 ** 3, dataWritable: true, cacheWritable: true, installWritable: true, cacheFree: 10 * 1024 ** 3, installFree: 10 * 1024 ** 3, installed: true };
 test('compatibility blocks unsupported Windows, wrong architecture, and unwritable account data', () => {
   assert.equal(compatibility.evaluate(healthy).canAutoInstall, true);
+  assert.equal(compatibility.evaluate(healthy, null).canAutoInstall, true);
   for (const change of [{ platform: 'linux' }, { release: '10.0.17763' }, { arch: 'ia32' }, { dataWritable: false }]) assert.equal(compatibility.evaluate({ ...healthy, ...change }).canRun, false);
 });
 test('disk and update permission failures block installation without preventing local sign-in', () => {
