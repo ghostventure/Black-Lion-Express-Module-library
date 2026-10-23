@@ -143,7 +143,7 @@ else {
   window.on('session-end', () => { windowsShutdown = true; });
   window.removeMenu(); window.once('ready-to-show', () => { window.show(); if (launchMinimized) setTimeout(() => window?.minimize(), 0); });
   window.on('close', () => { try { mkdirSync(app.getPath('userData'), { recursive: true }); writeFileSync(stateFile + '.tmp', JSON.stringify(window.getNormalBounds())); renameSync(stateFile + '.tmp', stateFile); } catch {} });
-  window.webContents.on('dom-ready', () => { if (window.webContents.getURL().startsWith('http://127.0.0.1:4545/')) window.webContents.insertCSS(readFileSync(join(__dirname, 'desktop.css'), 'utf8')).catch(() => {}); });
+  window.webContents.on('dom-ready', () => { if (window.webContents.getURL().startsWith('http://127.0.0.1:4545/')) window.webContents.insertCSS(readFileSync(join(__dirname, 'desktop.css'), 'utf8') + '\n' + readFileSync(join(__dirname, 'workspace.css'), 'utf8')).catch(() => {}); });
   const navigate = (event, url) => {
    if (!allowed(url) && url.split('?')[0] !== statusURL) { event.preventDefault(); return; }
    if (integrityBlocked && url.split('?')[0] !== statusURL) { event.preventDefault(); return; }

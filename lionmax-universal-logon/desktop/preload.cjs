@@ -29,12 +29,33 @@ window.addEventListener('DOMContentLoaded', () => {
   brand.className = 'desktop-brand';
   brand.textContent = 'LionMax';
   nav.append(brand);
-  for (const [path, label] of [['/home','Home'],['/login','Sign in'],['/register','Create account'],['/account','My account'],['/launcher','App launcher'],['/security','Security'],['/appearance','Access & appearance'],['/connections','Connections'],['/compatibility','Compatibility'],['/updates','Updates'],['/support','Support'],['/privacy','Privacy & security'],['/help','Help']]) {
+  const groups = [
+    ['WORKSPACE', [['/home','Home','⌂'],['/launcher','App launcher','▦'],['/connections','Connections','↔']]],
+    ['YOUR ACCOUNT', [['/account','My account','◉'],['/security','Security','◇'],['/appearance','Preferences','⚙']]],
+    ['HELP & SYSTEM', [['/compatibility','Compatibility','✓'],['/updates','Updates','↑'],['/support','Support','?'],['/privacy','Privacy & security','◈'],['/help','Help','i']]],
+    ['ACCOUNT ACCESS', [['/login','Sign in','→'],['/register','Create account','＋']]]
+  ];
+  for (const [groupName, items] of groups) {
+    const group = document.createElement('div');
+    group.className = 'desktop-nav-group';
+    const heading = document.createElement('span');
+    heading.className = 'desktop-nav-heading';
+    heading.textContent = groupName;
+    group.append(heading);
+    for (const [path, label, icon] of items) {
     const link = document.createElement('a');
     link.href = path;
-    link.textContent = label;
-    if (location.pathname === path) link.setAttribute('aria-current', 'page');
-    nav.append(link);
+    link.dataset.navPath = path;
+    const glyph = document.createElement('span');
+    glyph.className = 'desktop-nav-icon';
+    glyph.setAttribute('aria-hidden', 'true');
+    glyph.textContent = icon;
+    const text = document.createElement('span');
+    text.className = 'desktop-nav-label';
+    text.textContent = label;
+    link.append(glyph, text);
+    if (location.pathname === path || (path !== '/home' && path !== '/login' && path !== '/register' && location.pathname.startsWith(path + '/'))) link.setAttribute('aria-current', 'page');
+    group.append(link);
     if (path === '/connections') fetch('/api/connection-status').then(response => response.ok ? response.json() : null).then(state => {
       if (!state) return;
       const badge = document.createElement('span'); badge.className = 'desktop-nav-state';
@@ -42,12 +63,15 @@ window.addEventListener('DOMContentLoaded', () => {
       badge.setAttribute('aria-label', badge.textContent);
       link.append(badge); link.setAttribute('aria-label', `${label}, ${badge.textContent}`);
     }).catch(() => {});
+    }
+    nav.append(group);
   }
   const status = document.createElement('div');
   status.className = 'desktop-status';
   status.textContent = 'On this device';
   nav.append(status);
   document.body.prepend(nav);
+  document.documentElement.dataset.page = location.pathname.split('/').filter(Boolean)[0] || 'home';
   const heading = document.querySelector('h2');
   if (location.pathname === '/login' && heading) heading.textContent = 'Sign in';
   if (location.pathname === '/register' && heading) heading.textContent = 'Create account';

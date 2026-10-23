@@ -1,0 +1,386 @@
+﻿/* LionMax workspace shell: calm navigation, clear hierarchy, and room for the UX tools. */
+.desktop {
+  --shell-bg: #0b1020;
+  --shell-panel: #121a2b;
+  --shell-panel-raised: #182338;
+  --shell-line: #283750;
+  --shell-cyan: var(--gold);
+  background: var(--shell-bg);
+}
+.desktop body {
+  background:
+    radial-gradient(ellipse at 78% -8%, #1c526145, transparent 34rem),
+    radial-gradient(ellipse at 88% 92%, #502b5a24, transparent 30rem),
+    var(--shell-bg);
+}
+.desktop .desktop-nav {
+  width: 252px;
+  padding: 26px 15px 16px;
+  gap: 0;
+  border-right: 1px solid #29354a;
+  background: linear-gradient(180deg, #111a2b 0%, #0d1423 55%, #0b1120 100%);
+  box-shadow: 16px 0 40px #0002;
+}
+.desktop .desktop-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 64px;
+  padding: 0 10px 21px 0;
+  color: #f4f7ff;
+  font-size: 19px;
+  letter-spacing: 2.2px;
+}
+.desktop .desktop-brand:before {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  margin: 0;
+}
+.desktop-nav-group {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 12px;
+}
+.desktop-nav-heading {
+  padding: 9px 10px 5px;
+  color: #74839d;
+  font: 600 9px/1.4 'Segoe UI Variable', 'Segoe UI', sans-serif;
+  letter-spacing: 1.5px;
+}
+.desktop .desktop-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 41px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #aab6ca;
+  font-size: 12px;
+  font-weight: 500;
+  transition: color .16s ease, background .16s ease, border-color .16s ease;
+}
+.desktop .desktop-nav a:hover {
+  color: #f4f7ff;
+  border-color: #293a54;
+  background: #17243a;
+}
+.desktop .desktop-nav a[aria-current] {
+  color: #dffefa;
+  border-color: #56d8cb38;
+  background: linear-gradient(100deg, #2b867b35, #192b3c 75%);
+  box-shadow: inset 2px 0 #7cf5e8;
+  font-weight: 650;
+}
+.desktop-nav-icon {
+  display: grid;
+  width: 23px;
+  height: 23px;
+  flex: 0 0 23px;
+  place-items: center;
+  border: 1px solid #34445e;
+  border-radius: 7px;
+  color: #8fa1bd;
+  font: 15px/1 'Segoe UI Symbol', 'Segoe UI', sans-serif;
+}
+.desktop .desktop-nav a[aria-current] .desktop-nav-icon {
+  color: var(--shell-cyan);
+  border-color: #64ded052;
+  background: #5adfd012;
+}
+.desktop .desktop-nav-state {
+  margin: 0 0 0 auto;
+  padding: 3px 6px;
+  border-color: #3d5c60;
+  border-radius: 10px;
+  color: #93e2d8;
+  font: 9px 'Segoe UI Variable', 'Segoe UI', sans-serif;
+  white-space: nowrap;
+}
+.desktop .desktop-status {
+  margin: auto 2px 0;
+  padding: 13px 10px 3px;
+  border-top-color: #29354a;
+  color: #8f9db3;
+  font: 11px 'Segoe UI Variable', 'Segoe UI', sans-serif;
+}
+.desktop .desktop-status:before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #79ddb1;
+  box-shadow: 0 0 10px #79ddb166;
+}
+.desktop main, .desktop main.wide {
+  margin-left: 252px;
+  padding: 44px clamp(26px, 4vw, 64px);
+  min-height: 100vh;
+}
+.desktop .panel {
+  max-width: 710px;
+  padding: 42px 46px;
+  border: 1px solid #293851;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #141e31 0%, #101827 74%);
+  box-shadow: 0 24px 70px #0003;
+}
+.desktop .panel:before { display: none; }
+.desktop h2 {
+  margin: 14px 0 8px;
+  color: #f4f7ff;
+  font-size: 36px;
+  letter-spacing: -1.3px;
+}
+.desktop .eyebrow { color: var(--gold); letter-spacing: 1.5px; }
+.desktop .intro { max-width: 720px; color: #a8b5c9; line-height: 1.75; }
+.desktop h3 { color: #e9effa; font-size: 16px; font-weight: 650; letter-spacing: -.15px; }
+.desktop label { color: #d8e1f0; }
+.desktop input:not([type=checkbox]):not([type=hidden]), .desktop select,
+.desktop textarea {
+  border-color: #33435d;
+  border-radius: 8px;
+  background: #0d1524;
+}
+.desktop input:focus, .desktop select:focus, .desktop textarea:focus {
+  border-color: #69dace;
+  box-shadow: 0 0 0 3px #69dace18;
+}
+.desktop .primary, .desktop .secondary { border-radius: 8px; box-shadow: none; }
+.desktop .secondary { background: #1b2940; border-color: #3a4d69; }
+.desktop .secondary:hover { background: #22334c; border-color: #6adace; }
+.desktop .wide { max-width: 1280px; }
+
+/* Pages with workspace navigation use a broad canvas and modular surfaces. */
+.desktop[data-page=home] main > .panel,
+.desktop[data-page=connections] main > .panel,
+.desktop[data-page=launcher] main > .panel,
+.desktop[data-page=support] main > .panel,
+.desktop[data-page=account] main > .panel,
+.desktop[data-page=security] main > .panel,
+.desktop[data-page=appearance] main > .panel {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 40px clamp(26px, 3.5vw, 48px);
+}
+.desktop[data-page=home] main > .panel { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr); gap: 0 28px; }
+.desktop[data-page=home] main > .panel > .eyebrow,
+.desktop[data-page=home] main > .panel > h2,
+.desktop[data-page=home] main > .panel > .intro,
+.desktop[data-page=home] main > .panel > .dashboard-layout,
+.desktop[data-page=home] main > .panel > [data-section-key=overview],
+.desktop[data-page=home] main > .panel > [data-section-key=updates] { grid-column: 1 / -1; }
+.desktop[data-page=home] main > .panel > h2 { margin-top: 15px; font-size: 40px; }
+.desktop[data-page=home] [data-dashboard-section] {
+  min-width: 0;
+  margin: 13px 0;
+  padding: 20px 22px;
+  border: 1px solid #293851;
+  border-radius: 12px;
+  background: linear-gradient(150deg, #141f32, #101827);
+}
+.desktop[data-page=home] [data-dashboard-section] h3 { margin: 0 0 12px; }
+.desktop[data-page=home] [data-section-key=overview] { padding: 19px 22px 21px; }
+.desktop[data-page=home] .home-stats { gap: 12px; margin: 14px 0 0; }
+.desktop[data-page=home] .home-stat {
+  min-height: 94px;
+  align-content: center;
+  padding: 15px 18px;
+  border-color: #2b3b54;
+  border-radius: 9px;
+  background: linear-gradient(130deg, #17263a, #111a2a);
+}
+.desktop[data-page=home] .home-stat strong { color: #8ce8dc; font-size: 29px; }
+.desktop[data-page=home] .home-stat span { color: #aebad0; font-size: 11px; }
+.desktop[data-page=home] .setup-checklist li { border-color: #293851; }
+.desktop[data-page=home] .step-number { border-color: #425673; background: #17243a; }
+.desktop[data-page=home] .home-connection,
+.desktop[data-page=home] .home-app-list>a,
+.desktop[data-page=home] .global-results>a {
+  border-color: #2d3e58;
+  border-radius: 8px;
+  background: #101a2a;
+}
+.desktop[data-page=home] .home-connection:hover,
+.desktop[data-page=home] .home-app-list>a:hover,
+.desktop[data-page=home] .global-results>a:hover { border-color: #5bc9c0; background: #15243a; }
+.desktop[data-page=home] #workspace-search { margin-bottom: 10px; }
+
+.desktop[data-page=connections] main > .panel > h2,
+.desktop[data-page=launcher] main > .panel > h2,
+.desktop[data-page=support] main > .panel > h2 { font-size: 38px; }
+.desktop[data-page=connections] .connection-toolbar { gap: 10px; }
+.desktop[data-page=connections] .connection-card,
+.desktop[data-page=connections] .saved-site,
+.desktop[data-page=connections] .website-form,
+.desktop[data-page=launcher] .launcher-card,
+.desktop[data-page=support] .recovery-guide {
+  border-color: #2c3c55;
+  border-radius: 10px;
+  background-color: #101a2a;
+}
+.desktop[data-page=connections] .connection-card { padding: 18px; }
+.desktop[data-page=connections] .saved-site { margin: 9px 0; padding: 14px; }
+.desktop[data-page=connections] .website-form { padding: 20px; }
+.desktop[data-page=connections] #bulk-profiles,
+.desktop[data-page=connections] #bulk-sites { padding: 14px; border: 1px solid #2b3b54; border-radius: 9px; background: #101a2a; }
+.desktop[data-page=launcher] .launcher-card { padding: 22px; }
+.desktop[data-page=launcher] .app-url { padding: 8px 10px; border: 1px solid #293851; border-radius: 7px; background: #0c1422; }
+.desktop[data-page=support] .recovery-guide { padding: 20px; margin: 14px 0; border: 1px solid #2c3c55; }
+.desktop[data-page=support] #support-preview,
+.desktop[data-page=support] #feedback-message { background: #0c1422; border-color: #33435d; border-radius: 8px; }
+
+@media (max-width: 1020px) {
+  .desktop .desktop-nav { width: 220px; }
+  .desktop main, .desktop main.wide { margin-left: 220px; padding: 32px 24px; }
+  .desktop[data-page=home] main > .panel { grid-template-columns: minmax(0, 1fr); }
+  .desktop[data-page=home] main > .panel > [data-dashboard-section] { grid-column: 1; }
+  .desktop[data-page=home] main > .panel > [data-section-key=overview],
+  .desktop[data-page=home] main > .panel > [data-section-key=updates] { grid-column: 1; }
+}
+@media (max-width: 740px) {
+  .desktop .desktop-nav { width: 74px; align-items: center; padding: 16px 7px; }
+  .desktop .desktop-brand { justify-content: center; width: 100%; padding: 0 0 14px; font-size: 0; }
+  .desktop .desktop-brand:before { width: 40px; height: 40px; flex-basis: 40px; }
+  .desktop-nav-group { width: 100%; gap: 6px; margin: 6px 0; }
+  .desktop-nav-heading { overflow: hidden; height: 1px; padding: 0; font-size: 0; }
+  .desktop .desktop-nav a { justify-content: center; min-height: 42px; padding: 7px; font-size: 12px; }
+  .desktop-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .desktop-nav-icon { width: 27px; height: 27px; flex-basis: 27px; font-size: 16px; }
+  .desktop .desktop-nav-state { display: none; }
+  .desktop .desktop-status { width: 100%; padding: 12px 0 2px; font-size: 0; text-align: center; }
+  .desktop .desktop-status:before { margin: 0; }
+  .desktop main, .desktop main.wide { margin-left: 74px; padding: 22px 14px; }
+  .desktop .panel, .desktop[data-page=home] main > .panel,
+  .desktop[data-page=connections] main > .panel, .desktop[data-page=launcher] main > .panel,
+  .desktop[data-page=support] main > .panel, .desktop[data-page=account] main > .panel,
+  .desktop[data-page=security] main > .panel, .desktop[data-page=appearance] main > .panel { padding: 24px 20px; }
+  .desktop[data-page=home] main > .panel > h2 { font-size: 32px; }
+  .desktop[data-page=home] .home-stats { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .desktop .desktop-nav a { transition: none; }
+}
+
+/* Keep the user's light and system appearance choices intact inside the shell. */
+html.desktop[data-theme=light] body,
+html.desktop[data-theme=system] body {
+  background: #f2f5fa;
+}
+html.desktop[data-theme=light] { background: #f2f5fa; color: #17253a; }
+html.desktop[data-theme=light] .desktop-nav,
+html.desktop[data-theme=system] .desktop-nav {
+  background: linear-gradient(180deg, #edf2f8, #e5ebf3);
+  border-right-color: #c8d2df;
+  box-shadow: 10px 0 28px #17304a0a;
+}
+html.desktop[data-theme=light] .desktop-brand,
+html.desktop[data-theme=system] .desktop-brand { color: #17253a; }
+html.desktop[data-theme=light] .desktop-nav-heading,
+html.desktop[data-theme=system] .desktop-nav-heading { color: #63748b; }
+html.desktop[data-theme=light] .desktop-nav a,
+html.desktop[data-theme=system] .desktop-nav a { color: #46566d; }
+html.desktop[data-theme=light] .desktop-nav a:hover,
+html.desktop[data-theme=system] .desktop-nav a:hover { color: #17253a; background: #dfe7f1; border-color: #c4d0df; }
+html.desktop[data-theme=light] .desktop-nav a[aria-current],
+html.desktop[data-theme=system] .desktop-nav a[aria-current] { color: #075b5a; background: #d4eeeb; border-color: #aadbd5; }
+html.desktop[data-theme=light] .desktop-nav-icon,
+html.desktop[data-theme=system] .desktop-nav-icon { color: #52657d; border-color: #c5d0de; background: #f4f7fb; }
+html.desktop[data-theme=light] .desktop-status,
+html.desktop[data-theme=system] .desktop-status { color: #586980; border-top-color: #c8d2df; }
+html.desktop[data-theme=light] .panel,
+html.desktop[data-theme=system] .panel { color: #17253a; background: #fff; border-color: #cfdae7; box-shadow: 0 18px 50px #17304a12; }
+html.desktop[data-theme=light] h2,
+html.desktop[data-theme=system] h2,
+html.desktop[data-theme=light] h3,
+html.desktop[data-theme=system] h3 { color: #17253a; }
+html.desktop[data-theme=light] .intro,
+html.desktop[data-theme=system] .intro { color: #516178; }
+html.desktop[data-theme=light][data-page=home] [data-dashboard-section],
+html.desktop[data-theme=system][data-page=home] [data-dashboard-section],
+html.desktop[data-theme=light][data-page=connections] .connection-card,
+html.desktop[data-theme=system][data-page=connections] .connection-card,
+html.desktop[data-theme=light][data-page=connections] .saved-site,
+html.desktop[data-theme=system][data-page=connections] .saved-site,
+html.desktop[data-theme=light][data-page=connections] .website-form,
+html.desktop[data-theme=system][data-page=connections] .website-form,
+html.desktop[data-theme=light][data-page=launcher] .launcher-card,
+html.desktop[data-theme=system][data-page=launcher] .launcher-card,
+html.desktop[data-theme=light][data-page=support] .recovery-guide,
+html.desktop[data-theme=system][data-page=support] .recovery-guide {
+  color: #17253a;
+  background: #f7f9fc;
+  border-color: #d4deea;
+}
+html.desktop[data-theme=light][data-page=home] .home-stat,
+html.desktop[data-theme=system][data-page=home] .home-stat,
+html.desktop[data-theme=light][data-page=home] .home-connection,
+html.desktop[data-theme=system][data-page=home] .home-connection,
+html.desktop[data-theme=light][data-page=home] .home-app-list>a,
+html.desktop[data-theme=system][data-page=home] .home-app-list>a,
+html.desktop[data-theme=light][data-page=home] .global-results>a,
+html.desktop[data-theme=system][data-page=home] .global-results>a { color: #17253a; background: #fff; border-color: #d4deea; }
+html.desktop[data-theme=light] input:not([type=checkbox]):not([type=hidden]),
+html.desktop[data-theme=system] input:not([type=checkbox]):not([type=hidden]),
+html.desktop[data-theme=light] select,
+html.desktop[data-theme=system] select,
+html.desktop[data-theme=light] textarea,
+html.desktop[data-theme=system] textarea { color: #17253a; background: #fff; border-color: #bdcad9; }
+@media (prefers-color-scheme: light) {
+  html.desktop[data-theme=system] { background: #f2f5fa; color: #17253a; }
+}
+@media (prefers-color-scheme: dark) {
+  html.desktop[data-theme=system] { background: var(--shell-bg); color: #f0f4ff; }
+  html.desktop[data-theme=system] body { background: radial-gradient(ellipse at 78% -8%, #1c526145, transparent 34rem), radial-gradient(ellipse at 88% 92%, #502b5a24, transparent 30rem), var(--shell-bg); }
+  html.desktop[data-theme=system] .desktop-nav { background: linear-gradient(180deg, #111a2b 0%, #0d1423 55%, #0b1120 100%); border-right-color: #29354a; box-shadow: 16px 0 40px #0002; }
+  html.desktop[data-theme=system] .desktop-brand { color: #f4f7ff; }
+  html.desktop[data-theme=system] .desktop-nav-heading { color: #74839d; }
+  html.desktop[data-theme=system] .desktop-nav a { color: #aab6ca; }
+  html.desktop[data-theme=system] .desktop-nav a:hover { color: #f4f7ff; background: #17243a; border-color: #293a54; }
+  html.desktop[data-theme=system] .desktop-nav a[aria-current] { color: #dffefa; background: linear-gradient(100deg, #2b867b35, #192b3c 75%); border-color: #56d8cb38; }
+  html.desktop[data-theme=system] .desktop-nav-icon { color: #8fa1bd; border-color: #34445e; background: transparent; }
+  html.desktop[data-theme=system] .desktop-status { color: #8f9db3; border-top-color: #29354a; }
+  html.desktop[data-theme=system] .panel,
+  html.desktop[data-theme=system][data-page=home] main > .panel,
+  html.desktop[data-theme=system][data-page=connections] main > .panel,
+  html.desktop[data-theme=system][data-page=launcher] main > .panel,
+  html.desktop[data-theme=system][data-page=support] main > .panel,
+  html.desktop[data-theme=system][data-page=account] main > .panel,
+  html.desktop[data-theme=system][data-page=security] main > .panel,
+  html.desktop[data-theme=system][data-page=appearance] main > .panel { color: #f0f4ff; background: linear-gradient(145deg, #141e31 0%, #101827 74%); border-color: #293851; box-shadow: 0 24px 70px #0003; }
+  html.desktop[data-theme=system] h2,
+  html.desktop[data-theme=system] h3 { color: #f4f7ff; }
+  html.desktop[data-theme=system] .intro { color: #a8b5c9; }
+  html.desktop[data-theme=system][data-page=home] [data-dashboard-section],
+  html.desktop[data-theme=system][data-page=connections] .connection-card,
+  html.desktop[data-theme=system][data-page=connections] .saved-site,
+  html.desktop[data-theme=system][data-page=connections] .website-form,
+  html.desktop[data-theme=system][data-page=launcher] .launcher-card,
+  html.desktop[data-theme=system][data-page=support] .recovery-guide { color: #f0f4ff; background: #101a2a; border-color: #2c3c55; }
+  html.desktop[data-theme=system][data-page=home] .home-stat { color: #f0f4ff; background: linear-gradient(130deg, #17263a, #111a2a); border-color: #2b3b54; }
+  html.desktop[data-theme=system][data-page=home] .home-connection,
+  html.desktop[data-theme=system][data-page=home] .home-app-list>a,
+  html.desktop[data-theme=system][data-page=home] .global-results>a { color: #f0f4ff; background: #101a2a; border-color: #2d3e58; }
+  html.desktop[data-theme=system] input:not([type=checkbox]):not([type=hidden]),
+  html.desktop[data-theme=system] select,
+  html.desktop[data-theme=system] textarea { color: #f0f4ff; background: #0d1524; border-color: #33435d; }
+}
+
+/* This stylesheet is injected after the site styles, so keep large targets specific here. */
+html.desktop[data-target-size=large] .primary,
+html.desktop[data-target-size=large] .secondary,
+html.desktop[data-target-size=large] button:not(.reveal),
+html.desktop[data-target-size=large] select,
+html.desktop[data-target-size=large] input:not([type=hidden]):not([type=checkbox]):not([type=radio]),
+html.desktop[data-target-size=large] summary,
+html.desktop[data-target-size=large] .desktop-nav a,
+html.desktop[data-target-size=large] .setup-checklist a,
+html.desktop[data-target-size=large] .home-connection>a,
+html.desktop[data-target-size=large] .section-links a,
+html.desktop[data-target-size=large] .panel-bottom a { min-height: 50px; }
+html.desktop[data-target-size=large] input[type=checkbox],
+html.desktop[data-target-size=large] input[type=radio],
+html.desktop[data-target-size=large] .site-select input,
+html.desktop[data-target-size=large] .profile-select input { width: 22px; min-width: 22px; height: 22px; min-height: 22px; }

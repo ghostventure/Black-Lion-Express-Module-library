@@ -26,7 +26,7 @@ export class AppTools {
   return [...providers,...this.connections.websites(id).map(w=>({...w,id:'website:'+w.id,kind:'Saved app'}))].map(c=>({...c,pinned:pins.has(c.id)})).sort((a,b)=>Number(b.pinned)-Number(a.pinned)||a.name.localeCompare(b.name));
  }
  pin(id,item){if(!this.cards(id).some(c=>c.id===item))throw Error('Application not found.');const removed=this.db.prepare('DELETE FROM launcher_pins WHERE user_id=? AND item_id=?').run(id,item);if(!removed.changes)this.db.prepare('INSERT INTO launcher_pins VALUES(?,?)').run(id,item);}
- updateWebsite(id,item,name,url){name=String(name||'').trim();if(!name||name.length>80)throw Error('Enter a name up to 80 characters.');url=httpsUrl(String(url||''));if(url.length>2048)throw Error('The website address is too long.');if(!this.db.prepare('UPDATE saved_websites SET name=?,url=? WHERE user_id=? AND id=?').run(name,url,id,item).changes)throw Error('Application not found.');}
+ updateWebsite(id,item,name,url){const current=this.connections.websites(id).find(site=>site.id===item);if(!current)throw Error('Application not found.');this.connections.updateWebsite(id,item,{...current,name,url});}
 }
 export async function testProvider(plugin,fetcher=fetch){
  if(!plugin?.ready)throw Error(plugin?.issue||'Save the provider configuration first.');

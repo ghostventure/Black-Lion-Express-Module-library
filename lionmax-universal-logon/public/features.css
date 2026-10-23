@@ -32,3 +32,32 @@ html[data-theme=light]{color-scheme:light;--bg:#f1f4f8;--panel:#fff;--ink:#15203
 
 .home-layout-options{display:grid;gap:7px;margin-top:10px}.home-layout-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px}.home-layout-row .check{margin:0}.home-layout-row button{width:auto;min-height:34px;margin:0;padding:5px 9px}
 @media(max-width:540px){.home-layout-row{gap:5px}.home-layout-row button{padding:4px 6px}}
+
+/* Optional larger interaction targets for people who prefer less precise pointer work. */
+html[data-target-size=large] .primary,
+html[data-target-size=large] .secondary,
+html[data-target-size=large] button:not(.reveal),
+html[data-target-size=large] select,
+html[data-target-size=large] input:not([type=hidden]):not([type=checkbox]):not([type=radio]),
+html[data-target-size=large] summary,
+html[data-target-size=large] .desktop-nav a,
+html[data-target-size=large] .setup-checklist a,
+html[data-target-size=large] .home-connection>a,
+html[data-target-size=large] .section-links a,
+html[data-target-size=large] .panel-bottom a{min-height:50px}
+html[data-target-size=large] .primary,
+html[data-target-size=large] .secondary,
+html[data-target-size=large] button:not(.reveal){padding:12px 17px}
+html[data-target-size=large] .text-button{min-height:48px;padding:11px 14px}
+html[data-target-size=large] button.reveal{min-width:48px;min-height:48px;right:7px;top:0}
+html[data-target-size=large] summary{display:flex;align-items:center;padding:9px 12px;border-radius:7px}
+html[data-target-size=large] .check{min-height:48px;gap:13px;padding:7px 2px}
+html[data-target-size=large] input[type=checkbox],
+html[data-target-size=large] input[type=radio]{width:22px;min-width:22px;height:22px;min-height:22px;flex-basis:22px}
+html[data-target-size=large] .site-select input,
+html[data-target-size=large] .profile-select input{width:22px;min-width:22px;height:22px;min-height:22px}
+html[data-target-size=large] .connection-card,
+html[data-target-size=large] .saved-site,
+html[data-target-size=large] .home-connection,
+html[data-target-size=large] .home-app-list>a,
+html[data-target-size=large] .global-results>a{gap:14px}
