@@ -7,3 +7,5 @@ html.desktop{background:var(--bg)}
 .desktop main,.desktop main.wide{display:block;margin:0 0 0 224px;padding:48px 40px;max-width:none;min-height:100vh}.desktop .panel{padding:32px 38px;max-width:680px;margin:0 auto}.desktop h2{font-size:34px;margin:18px 0 12px}.desktop .intro{font-size:14px}.desktop input:not([type=checkbox]):not([type=hidden]){min-height:46px}.desktop .primary,.desktop .secondary{min-height:44px}.desktop .panel-top{display:flex}
 @media(max-width:900px){.desktop .desktop-nav{width:190px;padding:24px 10px}.desktop main,.desktop main.wide{margin-left:190px;padding:32px 24px}.desktop .panel{padding:28px 24px}.desktop .plugin-grid{grid-template-columns:1fr}}
 @media(max-width:720px){.desktop .desktop-nav{width:160px;padding:20px 8px}.desktop-brand{font-size:19px}.desktop main,.desktop main.wide{margin-left:160px;padding:24px 16px}.desktop .panel{padding:26px 20px}.desktop h2{font-size:29px}.desktop .panel-bottom{flex-wrap:wrap}}
+
+.desktop .desktop-nav-state{display:block;margin:5px 0 0 2px;width:max-content;max-width:100%;padding:3px 6px;border:1px solid var(--line);color:var(--gold);font:10px Consolas,monospace}

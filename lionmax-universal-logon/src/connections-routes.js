@@ -23,12 +23,14 @@ export function installConnections(app, { store, dataDir, issuer, form, csrf, ch
   mutation('/connections/websites/remove', req => connections.removeWebsite(req.user.id, req.body.id));
   mutation('/connections/websites/bulk-remove', req => connections.removeWebsites(req.user.id, req.body.ids === undefined ? [] : Array.isArray(req.body.ids) ? req.body.ids : [req.body.ids]));
   mutation('/connections/websites/restore', req => connections.restoreWebsite(req.user.id, req.body.id));
+  mutation('/connections/websites/recent/clear', req => connections.clearRecentlyOpened(req.user.id));
   app.post('/connections/websites/check', form, checkForm, signedIn, async (req,res)=>{try{if(!store.throttle('website-check:'+req.user.id,10,60_000))throw Error('Please wait before checking another website.');const result=await connections.checkWebsite(req.user.id,req.body.id);page(req,res,`Website responded with HTTP ${result.status}${result.ok?' and appears reachable.':' and may be unavailable.'}`);}catch(error){page(req,res,error.message,400);}});
   mutation('/connections/profiles/preferences', req => connections.profilePreferences(req.user.id, req.body.plugin_id, req.body));
+  mutation('/connections/profiles/copy', req => connections.copyProfilePreferences(req.user.id, req.body.source_plugin, req.body.target_plugin));
   mutation('/connections/profiles/bulk', req => connections.bulkProfiles(req.user.id, req.body.profiles === undefined ? [] : Array.isArray(req.body.profiles) ? req.body.profiles : [req.body.profiles], req.body.action, req.body.group_name));
   app.post('/connections/profiles/export', form, checkForm, signedIn, (req,res)=>{try{const ids=req.body.profiles===undefined?[]:Array.isArray(req.body.profiles)?req.body.profiles:[req.body.profiles];res.type('application/json').attachment('lionmax-account-profiles.json').send(JSON.stringify(connections.exportProfiles(req.user.id,ids),null,2));}catch(error){page(req,res,error.message,400);}});
   mutation('/connections/profiles/restore', req => connections.restoreProfile(req.user.id, req.body.plugin_id));
-  app.post('/connections/websites/open', form, checkForm, signedIn, (req,res) => {try{connections.markWebsiteOpened(req.user.id,req.body.id);const site=connections.websites(req.user.id).find(w=>w.id===req.body.id);if(!site)throw Error('Website not found.');res.redirect(303,site.url);}catch(error){page(req,res,error.message,400);}});
+  app.post('/connections/websites/open', form, checkForm, signedIn, (req,res) => {try{connections.markWebsiteOpened(req.user.id,req.body.id);if(!connections.websites(req.user.id).some(w=>w.id===req.body.id))throw Error('Website not found.');res.json({opened:true});}catch(error){page(req,res,error.message,400);}});
   mutation('/connections/grants/remove', req => connections.revokeGrant(req.user.id, req.body.id));
   mutation('/connections/:plugin/remove', req => connections.unlink(req.user.id, req.params.plugin));
   app.post('/connections/:plugin/start', form, checkForm, signedIn, async (req, res) => {
@@ -59,5 +61,5 @@ export function installConnections(app, { store, dataDir, issuer, form, csrf, ch
   };
   app.get('/connections/:plugin/callback', callback);
   app.post('/connections/:plugin/callback', form, callback);
-  return { connections, catalog, ids };
+  return { connections, catalog, ids, tools };
 }

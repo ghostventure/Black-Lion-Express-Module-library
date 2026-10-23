@@ -18,6 +18,10 @@ function supportSummary({version,plugins,identities,websites}){
 }
 
 export function installSupportRoutes(app,{tools,connections,signedIn,version}){
+ app.get('/api/connection-status',signedIn,(req,res)=>{
+  const plugins=tools.plugins(req.user.id),identities=connections.identities(req.user.id);
+  res.json({linked:identities.length,ready:plugins.filter(p=>p.ready).length,setup:plugins.filter(p=>!p.ready).length});
+ });
  app.get('/home',signedIn,(req,res)=>{
   const plugins=tools.plugins(req.user.id);
   const identities=connections.identities(req.user.id);

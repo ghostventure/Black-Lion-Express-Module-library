@@ -32,3 +32,23 @@ profileFile?.addEventListener('change',async()=>{
 document.getElementById('copy-callback')?.addEventListener('click',async()=>{
  const status=document.getElementById('copy-status');try{await navigator.clipboard.writeText(document.querySelector('.callback-url').textContent);status.textContent='Callback copied.';}catch{status.textContent='Select the callback URL above and copy it manually.';}
 });
+
+const setupForm=document.querySelector('form[action^="/connections/setup/"][action$="/save"]');
+if(setupForm){
+ const provider=location.pathname.split('/')[3],status=document.getElementById('setup-validation'),fields=[...setupForm.querySelectorAll('[data-connection-field]')];
+ const guid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+ const validate=()=>{
+  const values=Object.fromEntries(fields.map(field=>[field.dataset.connectionField,field.value.trim()])),errors=[];
+  if(values['client-id']){
+   const valid=provider==='microsoft'?guid.test(values['client-id']):provider==='google'?/^[a-zA-Z0-9._-]{8,200}\.apps\.googleusercontent\.com$/.test(values['client-id']):/^\d+\.\d+$/.test(values['client-id']);
+   if(!valid)errors.push(provider==='microsoft'?'Client ID must be a Microsoft application GUID.':provider==='google'?'Google client ID must end in .apps.googleusercontent.com.':'Slack client ID should look like 123456.123456.');
+  }
+  if(provider==='microsoft'&&values['tenant-id']&&!guid.test(values['tenant-id']))errors.push('Tenant ID must be a GUID.');
+  if(values['secret-env']&&!/^[A-Z][A-Z0-9_]{0,79}$/.test(values['secret-env']))errors.push('Use an uppercase environment variable name for the secret.');
+  if(values['callback-origin']){try{const url=new URL(values['callback-origin']);if(url.protocol!=='https:'||url.username||url.password||url.pathname!=='/'||url.search||url.hash)errors.push('Callback origin must be an HTTPS origin without a path.');}catch{errors.push('Enter a valid HTTPS callback origin.');}}
+  if(errors.length)status.textContent=errors.join(' ');
+  else if(values['client-id']&&(provider!=='microsoft'||values['tenant-id'])&&(provider!=='slack'||values['callback-origin']))status.textContent='Registration fields look correctly formatted. Save to check the provider registration.';
+  else status.textContent='Enter your provider registration details. LionMax checks their format as you type.';
+ };
+ for(const field of fields)field.addEventListener('input',validate);validate();
+}

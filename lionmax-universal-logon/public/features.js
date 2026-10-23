@@ -47,6 +47,31 @@
   function applyDashboard(value){if(stats)stats.hidden=!value.dashboard.stats;if(attempts){attempts.hidden=!value.dashboard.attempts;attempts.nextElementSibling.hidden=!value.dashboard.attempts;attempts.nextElementSibling.nextElementSibling.hidden=!value.dashboard.attempts;}if(events){events.hidden=!value.dashboard.events;events.nextElementSibling.hidden=!value.dashboard.events;}}
   applyDashboard(p);
  }
+ if(location.pathname==='/home'){
+  const sections=[...document.querySelectorAll('[data-dashboard-section]')],holder=sections[0]?.parentElement;
+  if(sections.length&&holder){
+   const controls=document.createElement('details');controls.className='dashboard-layout';
+   const summary=document.createElement('summary');summary.textContent='Customize Home layout';controls.append(summary);
+   holder.insertBefore(controls,sections[0]);
+   const applyHome=value=>{
+    const byId=Object.fromEntries(sections.map(section=>[section.dataset.sectionKey,section]));
+    for(const id of value.homeOrder){const section=byId[id];if(section){section.hidden=!value.home[id];holder.append(section);}}
+    controls.querySelector('.home-layout-options')?.remove();
+    const options=document.createElement('div');options.className='home-layout-options';
+    for(let index=0;index<value.homeOrder.length;index++){
+     const id=value.homeOrder[index],section=byId[id];if(!section)continue;
+     const row=document.createElement('div');row.className='home-layout-row';
+     const label=document.createElement('label');label.className='check';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=value.home[id];checkbox.addEventListener('change',()=>{const next=preferences.read();next.home[id]=checkbox.checked;preferences.save(next);applyHome(next);});label.append(checkbox,document.createTextNode(section.querySelector('h3')?.textContent||id));
+     const up=document.createElement('button');up.type='button';up.className='text-button';up.textContent='Move up';up.disabled=index===0;up.setAttribute('aria-label','Move '+(section.querySelector('h3')?.textContent||id)+' up');up.addEventListener('click',()=>move(index,-1));
+     const down=document.createElement('button');down.type='button';down.className='text-button';down.textContent='Move down';down.disabled=index===value.homeOrder.length-1;down.setAttribute('aria-label','Move '+(section.querySelector('h3')?.textContent||id)+' down');down.addEventListener('click',()=>move(index,1));
+     row.append(label,up,down);options.append(row);
+    }
+    controls.append(options);
+   };
+   const move=(index,delta)=>{const next=preferences.read(),other=index+delta;if(other<0||other>=next.homeOrder.length)return;[next.homeOrder[index],next.homeOrder[other]]=[next.homeOrder[other],next.homeOrder[index]];preferences.save(next);applyHome(next);};
+   applyHome(preferences.read());
+  }
+ }
  document.getElementById('download-recovery')?.addEventListener('click',()=>{
   const username=document.getElementById('saved-username')?.textContent||'';
   const codes=[...document.querySelectorAll('#recovery-codes code')].map(el=>el.textContent);

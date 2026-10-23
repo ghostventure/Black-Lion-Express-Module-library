@@ -13,7 +13,14 @@ window.addEventListener('DOMContentLoaded', () => {
     const link = event.target.closest('a[data-external]');
     if (!link) return;
     event.preventDefault();
-    ipcRenderer.invoke('lionmax:open-website', link.href).catch(() => { link.textContent = 'Unable to open. Check the website address.'; });
+    const mode = link.dataset.launchMode === 'window' ? 'window' : 'browser';
+    const open = async () => {
+      if (link.dataset.websiteId && link.dataset.csrf) {
+        try { await fetch('/connections/websites/open', { method: 'POST', body: new URLSearchParams({ id: link.dataset.websiteId, csrf: link.dataset.csrf }), signal: AbortSignal.timeout(4000) }); } catch {}
+      }
+      await ipcRenderer.invoke('lionmax:open-website', link.href, mode, link.dataset.accountProfile || '');
+    };
+    open().catch(() => { link.textContent = 'Unable to open. Check the website address.'; });
   });
   const nav = document.createElement('nav');
   nav.className = 'desktop-nav';
@@ -22,12 +29,19 @@ window.addEventListener('DOMContentLoaded', () => {
   brand.className = 'desktop-brand';
   brand.textContent = 'LionMax';
   nav.append(brand);
-  for (const [path, label] of [['/login','Sign in'],['/register','Create account'],['/account','My account'],['/launcher','App launcher'],['/security','Security'],['/appearance','Access & appearance'],['/connections','Connections'],['/compatibility','Compatibility'],['/updates','Updates'],['/privacy','Privacy & security'],['/help','Help']]) {
+  for (const [path, label] of [['/home','Home'],['/login','Sign in'],['/register','Create account'],['/account','My account'],['/launcher','App launcher'],['/security','Security'],['/appearance','Access & appearance'],['/connections','Connections'],['/compatibility','Compatibility'],['/updates','Updates'],['/support','Support'],['/privacy','Privacy & security'],['/help','Help']]) {
     const link = document.createElement('a');
     link.href = path;
     link.textContent = label;
     if (location.pathname === path) link.setAttribute('aria-current', 'page');
     nav.append(link);
+    if (path === '/connections') fetch('/api/connection-status').then(response => response.ok ? response.json() : null).then(state => {
+      if (!state) return;
+      const badge = document.createElement('span'); badge.className = 'desktop-nav-state';
+      badge.textContent = state.linked ? `${state.linked} linked` : state.ready ? 'Ready to connect' : 'Setup needed';
+      badge.setAttribute('aria-label', badge.textContent);
+      link.append(badge); link.setAttribute('aria-label', `${label}, ${badge.textContent}`);
+    }).catch(() => {});
   }
   const status = document.createElement('div');
   status.className = 'desktop-status';

@@ -1,6 +1,7 @@
 import { installSecurity } from './security-routes.js';
 import { healthProof, requireHost, maintain } from './reliability.js';
 import { installConnections } from './connections-routes.js';
+import { installSupportRoutes } from './support-routes.js';
 import express from 'express';
 import packageInfo from '../package.json' with { type: 'json' };
 import helmet from 'helmet';
@@ -42,13 +43,14 @@ function csrf(req,res){const current=req.cookies.lionmax_csrf;if(typeof current=
 function checkForm(req,res,next){if(req.get('origin')!==issuer||!view.same(req.cookies.lionmax_csrf,req.body.csrf))return res.status(403).send(view.layout('Request expired','<h2>Start again.</h2><p class="intro">This form could not be verified. Reload the sign-in page and try again.</p><a href="/login">Return to sign in</a>'));next();}
 function limited(req,res,next){if(!store.throttle('login:'+req.ip,30,15*60_000))return res.status(429).send(view.layout('Try later','<h2>Please wait.</h2><p class="intro">Too many attempts from this connection. Try again in 15 minutes.</p>'));next();}
 function signedIn(req,res,next){req.user=store.session(req.cookies.lionmax_session);if(!req.user)return res.redirect('/login');store.security.touch(req.cookies.lionmax_session);next();}
-const {connections,catalog,ids:pluginIds}=installConnections(app,{store,dataDir,issuer,form,csrf,checkForm,signedIn,limited});
+const {connections,catalog,ids:pluginIds,tools}=installConnections(app,{store,dataDir,issuer,form,csrf,checkForm,signedIn,limited});
+installSupportRoutes(app,{tools,connections,signedIn,version:packageInfo.version});
 installSecurity(app,{store,connections,form,csrf,checkForm,signedIn,limited,cookie});
 const failure='Credentials not accepted. Check all three fields. After five failed attempts, wait 15 minutes before trying again.';
 app.get('/health',(req,res)=>{healthProof(req,res);store.db.prepare('SELECT 1').get();res.json({status:'ok',service:'LionMax Universal Logon',version:packageInfo.version});});
-app.get('/',(req,res)=>res.redirect(store.session(req.cookies.lionmax_session)?'/account':'/login'));
+app.get('/',(req,res)=>res.redirect(store.session(req.cookies.lionmax_session)?'/home':'/login'));
 app.get('/login',(req,res)=>res.send(view.login({csrf:csrf(req,res)})));
-app.post('/login',form,checkForm,limited,async(req,res)=>{const result=await store.authenticate(req.body.username,req.body.password,req.body.token,req.ip);if(!result.ok)return res.status(401).send(view.login({csrf:csrf(req,res),error:failure}));store.logout(req.cookies.lionmax_session);res.cookie('lionmax_session',store.createSession(result.user.id,req.ip,req.get('user-agent')),{...cookie,maxAge:30*60_000});res.redirect(303,'/account');});
+app.post('/login',form,checkForm,limited,async(req,res)=>{const result=await store.authenticate(req.body.username,req.body.password,req.body.token,req.ip);if(!result.ok)return res.status(401).send(view.login({csrf:csrf(req,res),error:failure}));store.logout(req.cookies.lionmax_session);res.cookie('lionmax_session',store.createSession(result.user.id,req.ip,req.get('user-agent')),{...cookie,maxAge:30*60_000});res.redirect(303,'/home');});
 app.get('/register',(req,res)=>res.send(view.register(csrf(req,res),'',catalog)));
 app.post('/register',form,checkForm,async(req,res)=>{if(!store.throttle('register:'+req.ip,5,60*60_000))return res.status(429).send(view.register(csrf(req,res),'Too many registrations from this connection. Try later.',catalog));try{if(req.body.accepted!=='yes')throw Error('Please acknowledge the token and activity-recording notice.');const choices=req.body.plugins===undefined?[]:Array.isArray(req.body.plugins)?req.body.plugins:[req.body.plugins];if(choices.length>100||choices.some(id=>!pluginIds.includes(id)))throw Error('Choose a listed connector.');const account=await store.register({...req.body,selectedPlugins:choices});res.status(201).send(view.tokenPage(account.token,account.username,account.recoveryCodes));}catch(e){if(e.status||e.code)throw e;res.status(400).send(view.register(csrf(req,res),e.message,catalog));}});
 app.get('/account',signedIn,(req,res)=>res.send(view.account(req.user,store.usage(req.user.id),csrf(req,res))));

@@ -60,9 +60,22 @@ function log(event, detail = '') {
 function trusted(event, recovery = false) {
  return window && event.sender === window.webContents && event.senderFrame === window.webContents.mainFrame && (recovery ? event.senderFrame.url.split('?')[0] === statusURL : new URL(event.senderFrame.url).origin === 'http://127.0.0.1:4545');
 }
+function openWebsiteWindow(address, profileId = '') {
+ const target = new URL(address), host = target.hostname.toLowerCase().replace(/[^a-z0-9.-]/g, '-').replace(/\./g, '-').slice(0, 100), profile = /^[a-z0-9-]{1,64}$/.test(profileId) ? profileId : 'default';
+ const websiteSession = session.fromPartition(`lionmax-site-${host}-${profile}`);
+ websiteSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+ websiteSession.setPermissionCheckHandler(() => false);
+ const siteWindow = new BrowserWindow({ title: `LionMax · ${target.hostname}`, width: 1080, height: 760, minWidth: 640, minHeight: 480, parent: window, autoHideMenuBar: true, webPreferences: { session: websiteSession, nodeIntegration: false, contextIsolation: true, sandbox: true, webviewTag: false } });
+ const httpsOnly = (event, next) => { try { if (new URL(next).protocol !== 'https:') event.preventDefault(); } catch { event.preventDefault(); } };
+ siteWindow.webContents.on('will-navigate', httpsOnly);
+ siteWindow.webContents.on('will-redirect', httpsOnly);
+ siteWindow.webContents.setWindowOpenHandler(({url}) => { try { const next = new URL(url); if (next.protocol === 'https:' && !next.username && !next.password) shell.openExternal(next.href); } catch {} return { action: 'deny' }; });
+ siteWindow.loadURL(target.href).catch(() => siteWindow.close());
+ return true;
+}
 // Desktop window and startup preferences are stored separately from account data.
 const desktopPreferencesFile = join(app.getPath('userData'), 'desktop-preferences.json');
-const cleanDesktopPreferences = value => ({ startAtLogin: value?.startAtLogin === true, startMinimized: value?.startMinimized === true, theme: ['dark','light','system'].includes(value?.theme) ? value.theme : 'dark', lastPath: /^\/(?:login|register|account|launcher|security|appearance|connections|compatibility|updates|privacy|help)$/.test(value?.lastPath) ? value.lastPath : '/login' });
+const cleanDesktopPreferences = value => ({ startAtLogin: value?.startAtLogin === true, startMinimized: value?.startMinimized === true, theme: ['dark','light','system'].includes(value?.theme) ? value.theme : 'dark', lastPath: /^\/(?:home|login|register|account|launcher|security|appearance|connections|compatibility|updates|support|privacy|help)$/.test(value?.lastPath) ? value.lastPath : '/login' });
 function readDesktopPreferences() { try { return cleanDesktopPreferences(JSON.parse(readFileSync(desktopPreferencesFile, 'utf8'))); } catch { return cleanDesktopPreferences({}); } }
 function writeDesktopPreferences(value) { const clean = cleanDesktopPreferences(value); mkdirSync(dirname(desktopPreferencesFile), { recursive: true }); writeFileSync(desktopPreferencesFile + '.tmp', JSON.stringify(clean)); renameSync(desktopPreferencesFile + '.tmp', desktopPreferencesFile); return clean; }
 async function status(error) { if (!closing && window && !window.isDestroyed()) await window.loadURL(statusURL + (error ? '?' + new URLSearchParams({error}) : '')); }
@@ -96,7 +109,7 @@ if (!app.requestSingleInstanceLock()) app.exit(0);
 else {
  if (release && process.argv.some(arg => /^--(inspect|remote-debugging|no-sandbox|disable-web-security)/i.test(arg))) app.exit(1);
  app.setAppUserModelId('com.lionmax.desktop');
- ipcMain.handle('lionmax:open-website', async (event, value) => { if (!trusted(event)) throw Error('Untrusted request'); const url = new URL(value); if (url.protocol !== 'https:' || url.username || url.password) throw Error('HTTPS website required'); await shell.openExternal(url.href); });
+ ipcMain.handle('lionmax:open-website', async (event, value, mode = 'browser', profileId = '') => { if (!trusted(event)) throw Error('Untrusted request'); const url = new URL(value); if (url.protocol !== 'https:' || url.username || url.password || !['browser','window'].includes(mode) || (profileId && !/^[a-z0-9-]{1,64}$/.test(profileId))) throw Error('HTTPS website required'); if (mode === 'window') return openWebsiteWindow(url.href, profileId); await shell.openExternal(url.href); return true; });
  ipcMain.handle('lionmax:desktop-preferences:get', event => { if (!trusted(event) || new URL(event.senderFrame.url).pathname !== '/appearance') throw Error('Untrusted preference request'); return readDesktopPreferences(); });
  ipcMain.handle('lionmax:desktop-preferences:set', (event, changes) => {
   if (!trusted(event) || new URL(event.senderFrame.url).pathname !== '/appearance' || !changes || typeof changes !== 'object' || Array.isArray(changes) || Object.keys(changes).some(key => !['startAtLogin','startMinimized','theme'].includes(key)) || Object.entries(changes).some(([key,value]) => key === 'theme' ? !['dark','light','system'].includes(value) : typeof value !== 'boolean')) throw Error('Untrusted preference request');
@@ -123,7 +136,7 @@ else {
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false)); session.defaultSession.setPermissionCheckHandler(() => false);
   const stateFile = join(app.getPath('userData'), 'window-state.json'); let bounds = { width: 1180, height: 860 };
   try { const s = JSON.parse(readFileSync(stateFile)); if (Number.isFinite(s.x) && Number.isFinite(s.y) && s.width >= 640 && s.height >= 600 && screen.getAllDisplays().some(d => s.x < d.workArea.x + d.workArea.width && s.x + s.width > d.workArea.x && s.y < d.workArea.y + d.workArea.height && s.y + s.height > d.workArea.y)) bounds = { x: s.x, y: s.y, width: Math.min(s.width, 3840), height: Math.min(s.height, 2160) }; } catch {}
-  const prefs = readDesktopPreferences(), launchMinimized = prefs.startMinimized && process.argv.includes('--start-minimized');
+  const prefs = readDesktopPreferences(), launchMinimized = prefs.startMinimized;
   nativeTheme.themeSource = prefs.theme;
   window = new BrowserWindow({ title: 'LionMax', ...bounds, minWidth: 640, minHeight: 600, backgroundColor: '#080b14', autoHideMenuBar: true, show: false, webPreferences: { preload: join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, devTools: !release } });
   window.on('query-session-end', () => { windowsShutdown = true; });
