@@ -12,3 +12,14 @@ LionMax now checks device compatibility and can install verified updates automat
 Local accounts, connections, saved websites, settings, and signing keys remain in the separate data directory. Provider registrations are still required for external identity connections. Windows binaries remain unsigned by Authenticode; update manifests are signed with LionMax's existing pinned publisher key.
 
 Validation covers compatibility failures, update scheduling, resumed downloads, restart persistence, installer tampering, portable behavior, browser flows, packaged desktop controls, installation, and preserved account data.
+
+## Source updates after the 0.6.0 prerelease
+
+The `main` branch has follow-up workspace and backend improvements beyond the `lionmax-v0.6.0` tag:
+
+- Desktop workspace layout, navigation, and controls adapt to the available window size. Access & appearance includes a larger-buttons and click-areas option.
+- Launcher edits preserve saved website metadata and keep recent-website entries current.
+- Multi-step connection, recovery, bulk, restore, and grant operations use database transactions so failed operations do not leave partial changes.
+- Desktop packaging now includes the workspace stylesheet.
+
+These changes were pushed to `main` in commit `11d2374` on 2026-10-23. The refreshed 0.6.0 installer was built locally, but it was not uploaded to GitHub. The published prerelease and its installer remain unchanged; this source commit does not constitute a new downloadable release. Windows binaries are unsigned by Authenticode, as described above.

@@ -4,6 +4,8 @@
 
 [Download LionMax Desktop 0.6.0 for Windows](https://github.com/ghostventure/Black-Lion-Express-Module-library/releases/tag/lionmax-v0.6.0)
 
+The GitHub download is the published 0.6.0 prerelease. The `main` branch includes later workspace, accessibility, and backend improvements; those changes are not in that published installer yet. See [the source update notes](docs/RELEASE-0.6.0.md#source-updates-after-the-060-prerelease).
+
 LionMax is a standalone identity service. A user signs in with a username, password and personal seven-character alphanumeric token. After five failed attempts the account locks for 15 minutes; the counter and lock persist through a restart. Token verification records the observed IP, time and outcome. The account screen groups attempts by exact IP for the last 90 days.
 
 Another application can integrate LionMax through OpenID Connect Authorization Code with PKCE. The included Northstar app runs at a separate origin and demonstrates the whole flow. Client apps never receive the LionMax password or personal token. External software must choose to integrate LionMax; it cannot automatically authenticate unrelated applications.
@@ -35,6 +37,12 @@ Accounts, sessions, signing keys and audit data live under `%LOCALAPPDATA%\LionM
 **Auto-lock** defaults to ten minutes of inactivity. Choose 1, 5, 10, 15 or 30 minutes in Security, or use Lock now. Idle expiry is enforced by the backend, including after restart; the desktop also revokes local sessions when Windows locks, sleeps or resumes. Sessions retain their existing maximum 30-minute lifetime even with activity. Device-lock events revoke local LionMax authorization state; they cannot lock unrelated external applications. The upgrade preserves accounts, connections and credentials; pre-upgrade sessions require a fresh sign-in.
 
 These additions use the existing SQLite database and local scripts, with no added runtime dependency or process. Version 0.6.0 also adds App launcher, the Connection setup wizard and signed, verified desktop updates. See [release details and updater maintenance](docs/RELEASE-0.6.0.md).
+
+## Current source improvements
+
+The current `main` source reorganizes the desktop workspace around its account, connection, launcher, support, and settings tasks. Navigation, panels, and controls adapt to smaller windows, keyboard use, and larger click targets. The larger target preference is available under **Access & appearance**.
+
+The account and website flows now preserve saved website metadata when editing a launcher entry, update recent-website records, and protect multi-step connection and recovery changes from partial database writes. Desktop packaging includes the workspace stylesheet. These changes are source-only until a newer installer is published; use the linked GitHub release for the currently published download.
 
 ## Develop and verify
 
