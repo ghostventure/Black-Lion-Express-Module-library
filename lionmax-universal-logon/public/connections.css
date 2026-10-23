@@ -18,6 +18,7 @@
 .connection-copy p { font-size: 12px; color: var(--muted); margin: 5px 0; }
 .connection-status { font-size: 11px; color: var(--muted); }
 .connection-status.connected { color: var(--gold); }
+.connection-status.attention { color: #ffb5a8; }
 .connection-card form,.saved-site form { margin: 0; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 .saved-site { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); padding: 14px 0; font-size: 13px; }

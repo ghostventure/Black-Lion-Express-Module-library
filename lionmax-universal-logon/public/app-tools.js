@@ -1,8 +1,27 @@
 const search=document.getElementById('app-search');
-search?.addEventListener('input',()=>{let visible=0;for(const card of document.querySelectorAll('[data-app-search]')){card.hidden=!card.dataset.appSearch.includes(search.value.trim().toLowerCase());if(!card.hidden)visible++;}document.getElementById('app-empty').hidden=visible>0;});
+const launcherCards=[...document.querySelectorAll('#launcher-grid [data-app-id]')],folderFilter=document.getElementById('app-folder-filter'),empty=document.getElementById('app-empty');
+const filterLauncher=()=>{let visible=0;for(const card of launcherCards){const textMatch=card.dataset.appSearch.includes((search?.value||'').trim().toLowerCase()),folder=folderFilter?.value||'',folderMatch=!folder||(folder==='__unfiled'?!card.dataset.folder:card.dataset.folder===folder);card.hidden=!(textMatch&&folderMatch);if(!card.hidden)visible++;}if(empty){empty.hidden=visible>0;empty.textContent=launcherCards.length?'No apps match this search or folder.':'No launchable apps yet. Add a website below or connect an office provider to get started.';}};
+search?.addEventListener('input',filterLauncher);folderFilter?.addEventListener('change',filterLauncher);
+const selections=[...document.querySelectorAll('[data-launcher-select]')],selectedField=document.getElementById('launcher-selected'),selectionCount=document.getElementById('launcher-selection-count');
+const updateSelection=()=>{const selected=selections.filter(input=>input.checked);if(selectedField)selectedField.value=selected.map(input=>input.value).join(',');if(selectionCount)selectionCount.textContent=selected.length?`${selected.length} app${selected.length===1?'':'s'} selected.`:'Select apps below to organize them.';};
+selections.forEach(input=>input.addEventListener('change',updateSelection));
+document.getElementById('launcher-organize')?.addEventListener('submit',event=>{updateSelection();if(!selectedField.value){event.preventDefault();if(selectionCount)selectionCount.textContent='Select at least one app first.';}});
+const confirmLaunch=document.getElementById('launcher-confirm-launch');
+if(confirmLaunch){try{confirmLaunch.checked=localStorage.getItem('lionmax-confirm-launch')==='true';}catch{}confirmLaunch.addEventListener('change',()=>{try{localStorage.setItem('lionmax-confirm-launch',String(confirmLaunch.checked));}catch{}});}
+const grid=document.getElementById('launcher-grid'),orderForm=document.getElementById('launcher-order'),orderField=document.getElementById('launcher-order-value');let dragged=null;
+grid?.addEventListener('dragstart',event=>{const card=event.target.closest('[data-app-id]');if(!card||event.target.closest('a,button,input,summary')){event.preventDefault();return;}dragged=card;card.classList.add('is-dragging');event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',card.dataset.appId);});
+grid?.addEventListener('dragend',()=>{dragged?.classList.remove('is-dragging');dragged=null;});
+grid?.addEventListener('dragover',event=>{if(!dragged)return;event.preventDefault();const target=event.target.closest('[data-app-id]');if(target&&target!==dragged){const box=target.getBoundingClientRect();grid.insertBefore(dragged,event.clientY<box.top+box.height/2?target:target.nextSibling);}});
+grid?.addEventListener('drop',event=>{if(!dragged)return;event.preventDefault();orderField.value=[...grid.querySelectorAll('[data-app-id]')].map(card=>card.dataset.appId).join(',');orderForm?.requestSubmit();});
+grid?.addEventListener('click',event=>{const button=event.target.closest('[data-order-move]');if(!button)return;const card=button.closest('[data-app-id]'),cards=[...grid.querySelectorAll('[data-app-id]')],index=cards.indexOf(card),next=index+Number(button.dataset.orderMove);if(index<0||next<0||next>=cards.length)return;grid.insertBefore(card,button.dataset.orderMove==='-1'?cards[next]:cards[next].nextSibling);orderField.value=[...grid.querySelectorAll('[data-app-id]')].map(item=>item.dataset.appId).join(',');orderForm?.requestSubmit();});
+filterLauncher();
 if(document.getElementById('update-panel')&&window.lionmaxUpdates){
  const api=window.lionmaxUpdates,status=document.getElementById('update-status'),auto=document.getElementById('update-auto'),onExit=document.getElementById('update-on-exit'),check=document.getElementById('update-check'),download=document.getElementById('update-download'),install=document.getElementById('update-install');
+ const whatsNew=document.getElementById('update-whats-new');let currentVersion='';
+ document.getElementById('whats-new-dismiss')?.addEventListener('click',()=>{try{localStorage.setItem('lionmax-whats-new-dismissed',currentVersion);}catch{}if(whatsNew)whatsNew.hidden=true;});
  const render=s=>{
+  currentVersion=s.currentVersion||'';
+  if(whatsNew&&currentVersion){let previous='',dismissed='';try{previous=localStorage.getItem('lionmax-last-seen-version')||'';dismissed=localStorage.getItem('lionmax-whats-new-dismissed')||'';localStorage.setItem('lionmax-last-seen-version',currentVersion);}catch{}const changed=Boolean(previous&&previous!==currentVersion);whatsNew.hidden=!changed||dismissed===currentVersion;if(changed&&dismissed!==currentVersion)document.getElementById('whats-new-version').textContent=`You are now using LionMax ${currentVersion}. Here are some recent improvements.`;}
   status.textContent=s.message;document.getElementById('update-version').textContent='Installed: '+s.currentVersion+(s.availableVersion?' | Available: '+s.availableVersion:'');
   document.getElementById('update-last-check').textContent=s.lastCheck?'Last successful check: '+new Date(s.lastCheck).toLocaleString():'No successful update check yet.';
   const compatible=s.compatibility?.canUpdate!==false;

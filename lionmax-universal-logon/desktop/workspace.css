@@ -113,6 +113,23 @@
   background: #79ddb1;
   box-shadow: 0 0 10px #79ddb166;
 }
+.desktop-switch-account {
+  width: calc(100% - 4px);
+  min-height: 40px;
+  margin: 8px 2px 2px;
+  padding: 8px 10px;
+  border: 1px solid #33445d;
+  border-radius: 8px;
+  background: #172338;
+  color: #c6d3e6;
+  font: 600 12px 'Segoe UI Variable', 'Segoe UI', sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.desktop-switch-account:hover { border-color: #58cfc2; color: #edfffc; background: #1a3141; }
+.desktop-switch-account:focus-visible { outline: 3px solid #60d9ca; outline-offset: 2px; }
+.desktop-switch-account[hidden] { display: none; }
+.desktop-switch-account:disabled { opacity: .7; cursor: progress; }
 .desktop main, .desktop main.wide {
   margin-left: 252px;
   padding: 44px clamp(26px, 4vw, 64px);
@@ -252,6 +269,8 @@
   .desktop .desktop-nav-state { display: none; }
   .desktop .desktop-status { width: 100%; padding: 12px 0 2px; font-size: 0; text-align: center; }
   .desktop .desktop-status:before { margin: 0; }
+  .desktop-switch-account { overflow: hidden; width: 42px; min-height: 42px; margin: 8px 0 0; padding: 0; font-size: 0; text-align: center; }
+  .desktop-switch-account:before { content: '⇄'; font-size: 17px; }
   .desktop main, .desktop main.wide { margin-left: 74px; padding: 22px 14px; }
   .desktop .panel, .desktop[data-page=home] main > .panel,
   .desktop[data-page=connections] main > .panel, .desktop[data-page=launcher] main > .panel,

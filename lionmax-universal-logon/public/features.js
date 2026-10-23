@@ -5,8 +5,8 @@
   const fill=p=>{form.elements.accent.value=p.accent;form.elements.size.value=p.size;form.elements.targetSize.value=p.targetSize;form.elements.contrast.checked=p.contrast;form.elements.motion.checked=p.motion;form.elements.theme.value=p.theme;form.elements.density.value=p.density;};
   const values=()=>({...preferences.read(),accent:form.elements.accent.value,size:form.elements.size.value,targetSize:form.elements.targetSize.value,contrast:form.elements.contrast.checked,motion:form.elements.motion.checked,theme:form.elements.theme.value,density:form.elements.density.value});
   fill(preferences.read());form.addEventListener('change',()=>{preferences.apply(values());status.textContent='Preview only. Save to keep these choices.';});
-  form.addEventListener('submit',event=>{event.preventDefault();try{const p=preferences.save(values());status.textContent='Appearance saved on this device.';window.lionmaxDesktop?.setPreferences({theme:p.theme}).catch(()=>{status.textContent='Appearance saved. Windows theme integration could not be updated.';});}catch{status.textContent='Preview applied, but device storage is unavailable.';}});
-  document.getElementById('reset-appearance').addEventListener('click',()=>{fill(preferences.defaults);try{preferences.save(preferences.defaults);window.lionmaxDesktop?.setPreferences({theme:preferences.defaults.theme}).catch(()=>{});status.textContent='Defaults restored.';}catch{preferences.apply(preferences.defaults);status.textContent='Defaults previewed. Device storage is unavailable.';}});
+  form.addEventListener('submit',event=>{event.preventDefault();try{const p=preferences.save(values());form._lionMaxMarkSaved?.();status.textContent='Appearance saved on this device.';window.lionmaxDesktop?.setPreferences({theme:p.theme}).catch(()=>{status.textContent='Appearance saved. Windows theme integration could not be updated.';});}catch{status.textContent='Preview applied, but device storage is unavailable.';}});
+  document.getElementById('reset-appearance').addEventListener('click',()=>{fill(preferences.defaults);try{preferences.save(preferences.defaults);form._lionMaxMarkSaved?.();window.lionmaxDesktop?.setPreferences({theme:preferences.defaults.theme}).catch(()=>{});status.textContent='Defaults restored.';}catch{preferences.apply(preferences.defaults);status.textContent='Defaults previewed. Device storage is unavailable.';}});
  }
  const desktopPrefs=document.getElementById('desktop-preferences'),desktop=window.lionmaxDesktop;
  if(desktopPrefs&&desktop){
@@ -71,6 +71,23 @@
    const move=(index,delta)=>{const next=preferences.read(),other=index+delta;if(other<0||other>=next.homeOrder.length)return;[next.homeOrder[index],next.homeOrder[other]]=[next.homeOrder[other],next.homeOrder[index]];preferences.save(next);applyHome(next);};
    applyHome(preferences.read());
   }
+ }
+ const attemptsTable=document.getElementById('security-attempts');
+ if(attemptsTable){
+  const rows=[...attemptsTable.querySelectorAll('tbody tr[data-result]')],result=document.getElementById('activity-result'),ip=document.getElementById('activity-ip'),range=document.getElementById('activity-range'),count=document.getElementById('activity-count');
+  const filtered=()=>{const cutoff=range.value==='all'?0:Date.now()-({'24h':86400000,'7d':604800000,'30d':2592000000}[range.value]||0),query=ip.value.trim().toLowerCase();return rows.filter(row=>(result.value==='all'||row.dataset.result===result.value)&&row.dataset.ip.toLowerCase().includes(query)&&Number(row.dataset.at)>=cutoff);};
+  const apply=()=>{const visible=new Set(filtered());for(const row of rows)row.hidden=!visible.has(row);count.textContent=`Showing ${visible.size} of ${rows.length} attempts.`;};
+  for(const control of [result,ip,range])control.addEventListener(control===ip?'input':'change',apply);apply();
+  document.getElementById('export-security-activity').addEventListener('click',()=>{const csvCell=value=>{let text=String(value??'');if(/^[=+@-]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';};const csv=[['Result','Connection IP','Time (UTC)'],...filtered().map(row=>[row.dataset.result==='accepted'?'Accepted':'Rejected',row.dataset.ip,new Date(Number(row.dataset.at)).toISOString()])].map(row=>row.map(csvCell).join(',')).join('\r\n')+'\r\n';const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='LionMax-security-activity.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+ }
+ // Warn before leaving pages with local settings that are still only previews.
+ for(const form of document.querySelectorAll('form[data-confirm-unsaved]')){
+  const baseline=()=>new URLSearchParams(new FormData(form)).toString();let saved=baseline(),submitting=false;
+  const dirty=()=>baseline()!==saved;
+  form._lionMaxMarkSaved=()=>{saved=baseline();submitting=false;};form.addEventListener('submit',()=>{submitting=true;});
+  form.addEventListener('change',()=>{if(!dirty())saved=baseline();});
+  window.addEventListener('beforeunload',event=>{if(dirty()&&!submitting){event.preventDefault();event.returnValue='';}});
+  document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link||!dirty()||link.target||link.hasAttribute('download'))return;const target=new URL(link.href,location.href);if(target.origin===location.origin&&target.href===location.href)return;if(!window.confirm('You have unsaved changes. Leave this page and discard them?')){event.preventDefault();event.stopImmediatePropagation();}else submitting=true;} ,true);
  }
  document.getElementById('download-recovery')?.addEventListener('click',()=>{
   const username=document.getElementById('saved-username')?.textContent||'';

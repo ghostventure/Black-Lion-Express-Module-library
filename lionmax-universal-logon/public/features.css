@@ -61,3 +61,5 @@ html[data-target-size=large] .saved-site,
 html[data-target-size=large] .home-connection,
 html[data-target-size=large] .home-app-list>a,
 html[data-target-size=large] .global-results>a{gap:14px}
+
+.recovery-readiness{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;margin:14px 0;border:1px solid var(--line);border-radius:9px;background:#11150f}.recovery-readiness h3{margin:6px 0}.recovery-readiness.ready{border-color:#3c8866}.recovery-readiness.needs-action{border-color:var(--gold)}.recovery-state{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--gold);white-space:nowrap}.recovery-readiness.ready .recovery-state{color:#82d8a7}.activity-filters{display:grid;grid-template-columns:max-content minmax(150px,1fr);align-items:center;gap:9px 12px;padding:14px 0}.activity-filters label{font-size:12px;color:var(--muted)}.activity-filters .hint{grid-column:1/-1;margin:0}#security-attempts tr[hidden]{display:none}@media(max-width:640px){.activity-filters{grid-template-columns:1fr}.recovery-readiness{align-items:flex-start;flex-direction:column}}

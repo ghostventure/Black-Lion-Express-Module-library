@@ -18,8 +18,10 @@ Validation covers compatibility failures, update scheduling, resumed downloads, 
 The `main` branch has follow-up workspace and backend improvements beyond the `lionmax-v0.6.0` tag:
 
 - Desktop workspace layout, navigation, and controls adapt to the available window size. Access & appearance includes a larger-buttons and click-areas option.
-- Launcher edits preserve saved website metadata and keep recent-website entries current.
+- Launcher edits preserve saved website metadata and keep recent-website entries current. The launcher also supports favorites, folders, bulk organization, saved ordering, and an optional external-launch confirmation.
+- Home provides a guided tour, searchable support topics, connection health indicators, and a saved compact or comfortable dashboard layout. Updates can show a dismissible recap after the installed version changes.
+- Security shows recovery readiness, filters sign-in history by result, address, and time period, and exports the filtered rows. Appearance and automatic-lock settings warn before leaving with unsaved changes. Desktop navigation includes a protected account-switch action.
 - Multi-step connection, recovery, bulk, restore, and grant operations use database transactions so failed operations do not leave partial changes.
 - Desktop packaging now includes the workspace stylesheet.
 
-These changes were pushed to `main` in commit `11d2374` on 2026-10-23. The refreshed 0.6.0 installer was built locally, but it was not uploaded to GitHub. The published prerelease and its installer remain unchanged; this source commit does not constitute a new downloadable release. Windows binaries are unsigned by Authenticode, as described above.
+The source on `main` now includes these improvements beyond the `lionmax-v0.6.0` tag. A refreshed 0.6.0 installer has been built locally, but it has not been uploaded to GitHub. The published prerelease and its installer remain unchanged; the source branch and local installer do not constitute a new downloadable release. Windows binaries are unsigned by Authenticode, as described above.

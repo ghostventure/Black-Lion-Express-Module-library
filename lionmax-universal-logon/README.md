@@ -42,7 +42,9 @@ These additions use the existing SQLite database and local scripts, with no adde
 
 The current `main` source reorganizes the desktop workspace around its account, connection, launcher, support, and settings tasks. Navigation, panels, and controls adapt to smaller windows, keyboard use, and larger click targets. The larger target preference is available under **Access & appearance**.
 
-The account and website flows now preserve saved website metadata when editing a launcher entry, update recent-website records, and protect multi-step connection and recovery changes from partial database writes. Desktop packaging includes the workspace stylesheet. These changes are source-only until a newer installer is published; use the linked GitHub release for the currently published download.
+The launcher also supports favorites, folders, bulk organization, custom order, and an optional confirmation before opening external apps or websites. Home adds a guided tour, searchable help, connection health, and a saved dashboard density. Security shows recovery readiness, filters and exports sign-in history, and warns before leaving unsaved appearance or lock settings. Desktop users can switch accounts from navigation.
+
+The account and website flows preserve saved website metadata when editing a launcher entry, update recent-website records, and protect multi-step connection and recovery changes from partial database writes. Desktop packaging includes the workspace stylesheet. These changes are on `main`; the currently published GitHub download remains the earlier 0.6.0 prerelease installer.
 
 ## Develop and verify
 

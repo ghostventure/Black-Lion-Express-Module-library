@@ -15,6 +15,9 @@ window.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     const mode = link.dataset.launchMode === 'window' ? 'window' : 'browser';
     const open = async () => {
+      let askBeforeOpen = false;
+      try { askBeforeOpen = localStorage.getItem('lionmax-confirm-launch') === 'true'; } catch {}
+      if (askBeforeOpen && !window.confirm(`Open ${link.textContent.trim()}?\n${new URL(link.href).origin}`)) return;
       if (link.dataset.websiteId && link.dataset.csrf) {
         try { await fetch('/connections/websites/open', { method: 'POST', body: new URLSearchParams({ id: link.dataset.websiteId, csrf: link.dataset.csrf }), signal: AbortSignal.timeout(4000) }); } catch {}
       }
@@ -70,7 +73,35 @@ window.addEventListener('DOMContentLoaded', () => {
   status.className = 'desktop-status';
   status.textContent = 'On this device';
   nav.append(status);
+  const switchAccount = document.createElement('button');
+  switchAccount.type = 'button';
+  switchAccount.className = 'desktop-switch-account';
+  switchAccount.textContent = 'Switch account';
+  switchAccount.title = 'Sign out and return to sign-in to use another LionMax account';
+  switchAccount.hidden = true;
+  switchAccount.addEventListener('click', async () => {
+    switchAccount.disabled = true;
+    try {
+      const response = await fetch('/api/session', { credentials: 'same-origin', signal: AbortSignal.timeout(5000) });
+      if (!response.ok) { location.assign('/login'); return; }
+      const state = await response.json();
+      if (!state.authenticated || typeof state.csrf !== 'string') { location.assign('/login'); return; }
+      const form = document.createElement('form');
+      form.method = 'post'; form.action = '/logout';
+      const token = document.createElement('input'); token.type = 'hidden'; token.name = 'csrf'; token.value = state.csrf;
+      form.append(token); document.body.append(form); form.submit();
+    } catch (error) {
+      switchAccount.disabled = false;
+      switchAccount.textContent = error.message || 'Unable to switch accounts';
+    }
+  });
+  nav.append(switchAccount);
   document.body.prepend(nav);
+  fetch('/api/session', { credentials: 'same-origin', signal: AbortSignal.timeout(4000) }).then(async response => {
+    if (!response.ok) return;
+    const state = await response.json();
+    switchAccount.hidden = state.authenticated !== true;
+  }).catch(() => {});
   document.documentElement.dataset.page = location.pathname.split('/').filter(Boolean)[0] || 'home';
   const heading = document.querySelector('h2');
   if (location.pathname === '/login' && heading) heading.textContent = 'Sign in';
