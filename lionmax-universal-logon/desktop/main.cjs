@@ -60,6 +60,11 @@ function log(event, detail = '') {
 function trusted(event, recovery = false) {
  return window && event.sender === window.webContents && event.senderFrame === window.webContents.mainFrame && (recovery ? event.senderFrame.url.split('?')[0] === statusURL : new URL(event.senderFrame.url).origin === 'http://127.0.0.1:4545');
 }
+// Desktop window and startup preferences are stored separately from account data.
+const desktopPreferencesFile = join(app.getPath('userData'), 'desktop-preferences.json');
+const cleanDesktopPreferences = value => ({ startAtLogin: value?.startAtLogin === true, startMinimized: value?.startMinimized === true, theme: ['dark','light','system'].includes(value?.theme) ? value.theme : 'dark', lastPath: /^\/(?:login|register|account|launcher|security|appearance|connections|compatibility|updates|privacy|help)$/.test(value?.lastPath) ? value.lastPath : '/login' });
+function readDesktopPreferences() { try { return cleanDesktopPreferences(JSON.parse(readFileSync(desktopPreferencesFile, 'utf8'))); } catch { return cleanDesktopPreferences({}); } }
+function writeDesktopPreferences(value) { const clean = cleanDesktopPreferences(value); mkdirSync(dirname(desktopPreferencesFile), { recursive: true }); writeFileSync(desktopPreferencesFile + '.tmp', JSON.stringify(clean)); renameSync(desktopPreferencesFile + '.tmp', desktopPreferencesFile); return clean; }
 async function status(error) { if (!closing && window && !window.isDestroyed()) await window.loadURL(statusURL + (error ? '?' + new URLSearchParams({error}) : '')); }
 async function recover(reason) {
  if (closing || busy || integrityBlocked) return;
@@ -92,6 +97,14 @@ else {
  if (release && process.argv.some(arg => /^--(inspect|remote-debugging|no-sandbox|disable-web-security)/i.test(arg))) app.exit(1);
  app.setAppUserModelId('com.lionmax.desktop');
  ipcMain.handle('lionmax:open-website', async (event, value) => { if (!trusted(event)) throw Error('Untrusted request'); const url = new URL(value); if (url.protocol !== 'https:' || url.username || url.password) throw Error('HTTPS website required'); await shell.openExternal(url.href); });
+ ipcMain.handle('lionmax:desktop-preferences:get', event => { if (!trusted(event) || new URL(event.senderFrame.url).pathname !== '/appearance') throw Error('Untrusted preference request'); return readDesktopPreferences(); });
+ ipcMain.handle('lionmax:desktop-preferences:set', (event, changes) => {
+  if (!trusted(event) || new URL(event.senderFrame.url).pathname !== '/appearance' || !changes || typeof changes !== 'object' || Array.isArray(changes) || Object.keys(changes).some(key => !['startAtLogin','startMinimized','theme'].includes(key)) || Object.entries(changes).some(([key,value]) => key === 'theme' ? !['dark','light','system'].includes(value) : typeof value !== 'boolean')) throw Error('Untrusted preference request');
+  const next = { ...readDesktopPreferences(), ...changes };
+  if ('startAtLogin' in changes || 'startMinimized' in changes) app.setLoginItemSettings({ openAtLogin: next.startAtLogin, args: next.startMinimized ? ['--start-minimized'] : [] });
+  if ('theme' in changes) nativeTheme.themeSource = next.theme;
+  return writeDesktopPreferences(next);
+ });
  ipcMain.handle('lionmax:retry', async event => { if (!trusted(event, true)) throw Error('Untrusted request'); await integrityShutdown; retries = []; await boot(); });
  ipcMain.handle('lionmax:logs', async event => { if (!trusted(event, true)) throw Error('Untrusted request'); mkdirSync(logs, { recursive: true }); await shell.openPath(logs); });
  ipcMain.handle('lionmax:update', async (event, action, value) => {
@@ -110,15 +123,18 @@ else {
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false)); session.defaultSession.setPermissionCheckHandler(() => false);
   const stateFile = join(app.getPath('userData'), 'window-state.json'); let bounds = { width: 1180, height: 860 };
   try { const s = JSON.parse(readFileSync(stateFile)); if (Number.isFinite(s.x) && Number.isFinite(s.y) && s.width >= 640 && s.height >= 600 && screen.getAllDisplays().some(d => s.x < d.workArea.x + d.workArea.width && s.x + s.width > d.workArea.x && s.y < d.workArea.y + d.workArea.height && s.y + s.height > d.workArea.y)) bounds = { x: s.x, y: s.y, width: Math.min(s.width, 3840), height: Math.min(s.height, 2160) }; } catch {}
+  const prefs = readDesktopPreferences(), launchMinimized = prefs.startMinimized && process.argv.includes('--start-minimized');
+  nativeTheme.themeSource = prefs.theme;
   window = new BrowserWindow({ title: 'LionMax', ...bounds, minWidth: 640, minHeight: 600, backgroundColor: '#080b14', autoHideMenuBar: true, show: false, webPreferences: { preload: join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true, devTools: !release } });
   window.on('query-session-end', () => { windowsShutdown = true; });
   window.on('session-end', () => { windowsShutdown = true; });
-  window.removeMenu(); window.once('ready-to-show', () => window.show());
+  window.removeMenu(); window.once('ready-to-show', () => { window.show(); if (launchMinimized) setTimeout(() => window?.minimize(), 0); });
   window.on('close', () => { try { mkdirSync(app.getPath('userData'), { recursive: true }); writeFileSync(stateFile + '.tmp', JSON.stringify(window.getNormalBounds())); renameSync(stateFile + '.tmp', stateFile); } catch {} });
   window.webContents.on('dom-ready', () => { if (window.webContents.getURL().startsWith('http://127.0.0.1:4545/')) window.webContents.insertCSS(readFileSync(join(__dirname, 'desktop.css'), 'utf8')).catch(() => {}); });
   const navigate = (event, url) => {
    if (!allowed(url) && url.split('?')[0] !== statusURL) { event.preventDefault(); return; }
    if (integrityBlocked && url.split('?')[0] !== statusURL) { event.preventDefault(); return; }
+   try { const destination = new URL(url); if (destination.origin === 'http://127.0.0.1:4545' && cleanDesktopPreferences({ lastPath: destination.pathname }).lastPath === destination.pathname) writeDesktopPreferences({ ...readDesktopPreferences(), lastPath: destination.pathname }); } catch {}
    if (url.startsWith('http://127.0.0.1:4546/') && !supervisor?.children.get(4546)?.ready) { event.preventDefault(); if (!supervisor || busy) return; busy = true; (async () => { if (app.isPackaged) await verifyFiles(root, require('./service-integrity.json')); await supervisor.start(4546, 'examples/demo-app.js', 'Northstar Demo'); await window.loadURL(url); })().catch(async error => { integrityBlocked = true; stopMonitors(); await supervisor.stop(); await status(error.message); }).finally(() => { busy = false; }); }
   };
   window.webContents.on('will-navigate', navigate); window.webContents.on('will-redirect', navigate);
@@ -136,6 +152,7 @@ else {
   });
   await updater.restore();
   await boot();
+  if (prefs.lastPath !== '/login' && !closing && !integrityBlocked) await window.loadURL(`http://127.0.0.1:4545${prefs.lastPath}`);
   if (release) { setTimeout(() => updater.background().catch(() => {}), 15000).unref(); setInterval(() => updater.background().catch(() => {}), 900000).unref(); }
  }).catch(error => { log('desktop-fatal', error.code || error.name); app.quit(); });
 }

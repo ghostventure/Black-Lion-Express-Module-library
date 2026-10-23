@@ -2,11 +2,50 @@
  const preferences=window.LionMaxAppearance, form=document.getElementById('appearance-form');
  if(form){
   const status=document.getElementById('appearance-status');
-  const fill=p=>{form.elements.accent.value=p.accent;form.elements.size.value=p.size;form.elements.contrast.checked=p.contrast;form.elements.motion.checked=p.motion;};
-  const values=()=>({accent:form.elements.accent.value,size:form.elements.size.value,contrast:form.elements.contrast.checked,motion:form.elements.motion.checked});
+  const fill=p=>{form.elements.accent.value=p.accent;form.elements.size.value=p.size;form.elements.contrast.checked=p.contrast;form.elements.motion.checked=p.motion;form.elements.theme.value=p.theme;form.elements.density.value=p.density;};
+  const values=()=>({...preferences.read(),accent:form.elements.accent.value,size:form.elements.size.value,contrast:form.elements.contrast.checked,motion:form.elements.motion.checked,theme:form.elements.theme.value,density:form.elements.density.value});
   fill(preferences.read());form.addEventListener('change',()=>{preferences.apply(values());status.textContent='Preview only. Save to keep these choices.';});
-  form.addEventListener('submit',event=>{event.preventDefault();try{preferences.save(values());status.textContent='Appearance saved on this device.';}catch{status.textContent='Preview applied, but device storage is unavailable.';}});
-  document.getElementById('reset-appearance').addEventListener('click',()=>{fill(preferences.defaults);try{preferences.save(preferences.defaults);status.textContent='Defaults restored.';}catch{preferences.apply(preferences.defaults);status.textContent='Defaults previewed. Device storage is unavailable.';}});
+  form.addEventListener('submit',event=>{event.preventDefault();try{const p=preferences.save(values());status.textContent='Appearance saved on this device.';window.lionmaxDesktop?.setPreferences({theme:p.theme}).catch(()=>{status.textContent='Appearance saved. Windows theme integration could not be updated.';});}catch{status.textContent='Preview applied, but device storage is unavailable.';}});
+  document.getElementById('reset-appearance').addEventListener('click',()=>{fill(preferences.defaults);try{preferences.save(preferences.defaults);window.lionmaxDesktop?.setPreferences({theme:preferences.defaults.theme}).catch(()=>{});status.textContent='Defaults restored.';}catch{preferences.apply(preferences.defaults);status.textContent='Defaults previewed. Device storage is unavailable.';}});
+ }
+ const desktopPrefs=document.getElementById('desktop-preferences'),desktop=window.lionmaxDesktop;
+ if(desktopPrefs&&desktop){
+  const startup=document.createElement('label');startup.className='check';startup.innerHTML='<input type="checkbox" id="launch-at-login"><span>Start LionMax when I sign in to Windows</span>';
+  const minimized=document.createElement('label');minimized.className='check';minimized.innerHTML='<input type="checkbox" id="start-minimized"><span>Start minimized</span>';
+  const hintToggle=document.createElement('label');hintToggle.className='check';hintToggle.innerHTML='<input type="checkbox" id="show-hints"><span>Show first-use tips</span>';
+  const note=document.createElement('p');note.className='hint';note.id='desktop-settings-status';desktopPrefs.append(startup,minimized,hintToggle,note);
+  const showHints=document.getElementById('show-hints');showHints.checked=preferences.read().hints;
+  showHints.addEventListener('change',()=>{try{const p=preferences.read();p.hints=showHints.checked;preferences.save(p);if(p.hints)localStorage.removeItem('lionmax-first-tip-dismissed');note.textContent='Tip preference saved on this device.';}catch{note.textContent='Device storage is unavailable; the tip preference could not be saved.';}});
+  desktop.getPreferences().then(p=>{document.getElementById('launch-at-login').checked=p.startAtLogin;document.getElementById('start-minimized').checked=p.startMinimized;}).catch(()=>{note.textContent='Desktop settings could not be loaded.';});
+  for(const [id,key] of [['launch-at-login','startAtLogin'],['start-minimized','startMinimized']])document.getElementById(id).addEventListener('change',async event=>{try{const p=await desktop.setPreferences({[key]:event.target.checked});document.getElementById('launch-at-login').checked=p.startAtLogin;document.getElementById('start-minimized').checked=p.startMinimized;note.textContent='Desktop startup settings saved.';}catch{event.target.checked=!event.target.checked;note.textContent='Windows did not accept this startup setting.';}});
+ }
+ // Keyboard shortcuts are deliberately limited to navigation and search, and
+ // do not intercept typing inside form controls or editable content.
+ document.addEventListener('keydown',event=>{
+  if(event.altKey&&!event.ctrlKey&&!event.shiftKey&&/^\d$/.test(event.key)&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)){
+   const links=[...document.querySelectorAll('.desktop-nav a')],link=links[Number(event.key)-1];if(link){event.preventDefault();location.href=link.href;}
+  }
+  if(event.key==='/'&&!event.ctrlKey&&!event.altKey&&!event.metaKey&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)){
+   const search=document.querySelector('input[type="search"],input[placeholder*="Search" i]');if(search){event.preventDefault();search.focus();}
+  }
+ });
+ // Dismissible first-visit helper, stored locally and shown once per browser.
+ const hints=preferences.read();
+ let tipDismissed=false;try{tipDismissed=localStorage.getItem('lionmax-first-tip-dismissed')==='1';}catch{tipDismissed=true;}
+ if(hints.hints&&!tipDismissed&&!['/login','/register'].includes(location.pathname)){
+  const tip=document.createElement('aside');tip.className='first-use-tip';tip.setAttribute('role','note');tip.innerHTML='<strong>Quick tip</strong><span>Use the left navigation to move between LionMax sections. Open Access &amp; appearance to personalize the layout.</span><button type="button" aria-label="Dismiss tip">Dismiss</button>';
+  tip.querySelector('button').addEventListener('click',()=>{try{localStorage.setItem('lionmax-first-tip-dismissed','1');}catch{}tip.remove();});document.querySelector('main')?.prepend(tip);
+ }
+ // Local dashboard layout preferences only affect optional summary panels.
+ if(location.pathname==='/connections')for(const heading of document.querySelectorAll('h3'))if(heading.textContent.includes('Your software & websites'))heading.id='saved-sites';
+ if(location.pathname==='/security'){
+  const p=preferences.read(),stats=document.querySelector('.security-stats'),attempts=[...document.querySelectorAll('h3')].find(x=>x.textContent.includes('Recent sign-in attempts')),
+   events=[...document.querySelectorAll('h3')].find(x=>x.textContent.includes('Security history'));
+  if(stats){stats.hidden=!p.dashboard.stats;const controls=document.createElement('details');controls.className='dashboard-layout';controls.innerHTML='<summary>Customize dashboard</summary><label class="check"><input type="checkbox" data-dashboard="stats">Show summary cards</label><label class="check"><input type="checkbox" data-dashboard="attempts">Show recent sign-in attempts</label><label class="check"><input type="checkbox" data-dashboard="events">Show security history</label>';stats.after(controls);
+   for(const box of controls.querySelectorAll('[data-dashboard]')){const key=box.dataset.dashboard;box.checked=p.dashboard[key];box.addEventListener('change',()=>{const next=preferences.read();next.dashboard[key]=box.checked;preferences.save(next);applyDashboard(next);});}
+  }
+  function applyDashboard(value){if(stats)stats.hidden=!value.dashboard.stats;if(attempts){attempts.hidden=!value.dashboard.attempts;attempts.nextElementSibling.hidden=!value.dashboard.attempts;attempts.nextElementSibling.nextElementSibling.hidden=!value.dashboard.attempts;}if(events){events.hidden=!value.dashboard.events;events.nextElementSibling.hidden=!value.dashboard.events;}}
+  applyDashboard(p);
  }
  document.getElementById('download-recovery')?.addEventListener('click',()=>{
   const username=document.getElementById('saved-username')?.textContent||'';

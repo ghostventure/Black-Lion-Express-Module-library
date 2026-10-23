@@ -1,4 +1,5 @@
 const { ipcRenderer, contextBridge } = require('electron');
+if (location.origin === 'http://127.0.0.1:4545' && location.pathname === '/appearance') contextBridge.exposeInMainWorld('lionmaxDesktop', { getPreferences: () => ipcRenderer.invoke('lionmax:desktop-preferences:get'), setPreferences: value => ipcRenderer.invoke('lionmax:desktop-preferences:set', value) });
 if (location.origin === 'http://127.0.0.1:4545' && location.pathname === '/updates') {
  const api = {}; for (const action of ['status','check','download','install','automatic','installOnExit']) api[action] = value => ipcRenderer.invoke('lionmax:update', action, value);
  contextBridge.exposeInMainWorld('lionmaxUpdates', api);
