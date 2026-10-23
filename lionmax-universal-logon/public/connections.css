@@ -11,6 +11,7 @@
 .connection-toolbar { display: flex; gap: 20px; align-items: center; margin: 20px 0 28px; font-size: 13px; }
 .connection-list { display: grid; gap: 10px; }
 .connection-card { border: 1px solid var(--line); border-radius: 7px; padding: 16px; display: flex; align-items: center; gap: 16px; }
+.connection-card { border-left: 3px solid var(--profile-color, var(--line)); }
 .connection-icon { width: 36px; height: 36px; border-radius: 6px; background: #ffffff0c; color: var(--gold); display: grid; place-items: center; font-size: 21px; flex-shrink: 0; }
 .connection-copy { flex: 1; min-width: 0; }
 .connection-copy h3 { margin: 0 0 5px; font-size: 16px; }
@@ -25,8 +26,23 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .website-form { border: 1px solid var(--line); border-radius: 7px; padding: 16px; margin: 16px 0 28px; }
 .website-form button { margin-top: 12px; }
 .connection-card .secondary,.saved-site .secondary { white-space: nowrap; }
+.site-card { align-items: center; }
+.site-card > div { flex: 1; }
+.site-icon { color: var(--gold); font-size: 20px; min-width: 26px; text-align: center; }
+.site-select,.profile-select { margin: 0; }
+.site-select input,.profile-select input { width: 16px; min-height: 16px; height: 16px; accent-color: var(--gold); }
+.site-card details { flex: 0 0 auto; }
+.site-card details form,.connection-copy details form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px 12px; padding: 12px 0; }
+.site-card details form label,.connection-copy details form label { font-size: 12px; }
+.site-card details form input,.site-card details form select,.connection-copy details form input { margin-top: 5px; }
+.site-card details form .url-preview { grid-column: 1 / -1; overflow-wrap: anywhere; }
+.recent-sites { display: flex; flex-wrap: wrap; gap: 8px; }
+.recent-sites small { display: block; }
+.recovery-notice { border: 1px solid var(--gold); border-radius: 7px; padding: 14px; margin: 14px 0; }
+.recovery-notice form { margin: 8px 0; }
+#bulk-sites,#bulk-profiles { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 16px 0; }
 .saved-site .button-link,.connection-toolbar .button-link { width: auto; flex: 0 0 auto; margin: 0; }
 .saved-site > div { min-width: 120px; }
 .connection-toolbar > a { flex-shrink: 0; }
-@media(max-width:720px) { .plugin-grid { grid-template-columns: 1fr; } .connection-card { flex-wrap: wrap; } .saved-site { flex-wrap: wrap; } }
+@media(max-width:720px) { .plugin-grid { grid-template-columns: 1fr; } .connection-card { flex-wrap: wrap; } .saved-site { flex-wrap: wrap; } .site-card details { flex: 1 1 100%; } .site-card details form,.connection-copy details form { grid-template-columns: 1fr; } }
 .connection-card > .button-link { width: auto; flex: 0 0 auto; margin: 0; }

@@ -11,15 +11,24 @@ export function installConnections(app, { store, dataDir, issuer, form, csrf, ch
   const plugins = loadPluginsSafely(dataDir, issuer);
   const catalog = publicPlugins(plugins);
   const ids = plugins.map(p => p.id);
-  const page = (req, res, message = '', status = 200) => res.status(status).send(connectionsPage({ plugins: publicPlugins(tools.plugins(req.user.id)), selected: connections.selected(req.user.id), identities: connections.identities(req.user.id), websites: connections.websites(req.user.id), grants: connections.grants(req.user.id), csrf: csrf(req, res), message }));
+  const page = (req, res, message = '', status = 200) => res.status(status).send(connectionsPage({ plugins: publicPlugins(tools.plugins(req.user.id)), selected: connections.selected(req.user.id), identities: connections.identities(req.user.id), websites: connections.websites(req.user.id), grants: connections.grants(req.user.id), recent: connections.recentlyOpened(req.user.id), recoverableSites: connections.recoverableSites(req.user.id), recoverableProfiles: connections.recoverableProfiles(req.user.id), csrf: csrf(req, res), message }));
   app.get('/connections', signedIn, (req, res) => page(req, res));
   installAppTools(app,{tools,store,connections,form,csrf,checkForm,signedIn,limited,catalog});
   const mutation = (path, action) => app.post(path, form, checkForm, signedIn, (req, res) => {
     try { action(req); res.redirect(303, '/connections'); } catch (error) { page(req, res, error.message, 400); }
   });
   mutation('/connections/preferences', req => connections.select(req.user.id, req.body.plugins, ids));
-  mutation('/connections/websites/add', req => connections.addWebsite(req.user.id, req.body.name, req.body.url));
+  mutation('/connections/websites/add', req => connections.addWebsite(req.user.id, req.body.name, req.body.url, req.body));
+  mutation('/connections/websites/edit', req => connections.updateWebsite(req.user.id, req.body.id, req.body));
   mutation('/connections/websites/remove', req => connections.removeWebsite(req.user.id, req.body.id));
+  mutation('/connections/websites/bulk-remove', req => connections.removeWebsites(req.user.id, req.body.ids === undefined ? [] : Array.isArray(req.body.ids) ? req.body.ids : [req.body.ids]));
+  mutation('/connections/websites/restore', req => connections.restoreWebsite(req.user.id, req.body.id));
+  app.post('/connections/websites/check', form, checkForm, signedIn, async (req,res)=>{try{if(!store.throttle('website-check:'+req.user.id,10,60_000))throw Error('Please wait before checking another website.');const result=await connections.checkWebsite(req.user.id,req.body.id);page(req,res,`Website responded with HTTP ${result.status}${result.ok?' and appears reachable.':' and may be unavailable.'}`);}catch(error){page(req,res,error.message,400);}});
+  mutation('/connections/profiles/preferences', req => connections.profilePreferences(req.user.id, req.body.plugin_id, req.body));
+  mutation('/connections/profiles/bulk', req => connections.bulkProfiles(req.user.id, req.body.profiles === undefined ? [] : Array.isArray(req.body.profiles) ? req.body.profiles : [req.body.profiles], req.body.action, req.body.group_name));
+  app.post('/connections/profiles/export', form, checkForm, signedIn, (req,res)=>{try{const ids=req.body.profiles===undefined?[]:Array.isArray(req.body.profiles)?req.body.profiles:[req.body.profiles];res.type('application/json').attachment('lionmax-account-profiles.json').send(JSON.stringify(connections.exportProfiles(req.user.id,ids),null,2));}catch(error){page(req,res,error.message,400);}});
+  mutation('/connections/profiles/restore', req => connections.restoreProfile(req.user.id, req.body.plugin_id));
+  app.post('/connections/websites/open', form, checkForm, signedIn, (req,res) => {try{connections.markWebsiteOpened(req.user.id,req.body.id);const site=connections.websites(req.user.id).find(w=>w.id===req.body.id);if(!site)throw Error('Website not found.');res.redirect(303,site.url);}catch(error){page(req,res,error.message,400);}});
   mutation('/connections/grants/remove', req => connections.revokeGrant(req.user.id, req.body.id));
   mutation('/connections/:plugin/remove', req => connections.unlink(req.user.id, req.params.plugin));
   app.post('/connections/:plugin/start', form, checkForm, signedIn, async (req, res) => {
