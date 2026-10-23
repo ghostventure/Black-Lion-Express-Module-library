@@ -36,7 +36,7 @@ Accounts, sessions, signing keys and audit data live under `%LOCALAPPDATA%\LionM
 
 **Auto-lock** defaults to ten minutes of inactivity. Choose 1, 5, 10, 15 or 30 minutes in Security, or use Lock now. Idle expiry is enforced by the backend, including after restart; the desktop also revokes local sessions when Windows locks, sleeps or resumes. Sessions retain their existing maximum 30-minute lifetime even with activity. Device-lock events revoke local LionMax authorization state; they cannot lock unrelated external applications. The upgrade preserves accounts, connections and credentials; pre-upgrade sessions require a fresh sign-in.
 
-These additions use the existing SQLite database and local scripts, with no added runtime dependency or process. Version 0.6.0 also adds App launcher, the Connection setup wizard and signed, verified desktop updates. See [release details and updater maintenance](docs/RELEASE-0.6.0.md).
+These additions use the existing SQLite database and local scripts, with no added runtime dependency or process. Version 0.6.0 also adds App launcher, the Connection setup wizard and signed, verified desktop updates. See [release details](docs/RELEASE-0.6.0.md) and the [GitHub updater guide](docs/UPDATES.md).
 
 ## Current source improvements
 

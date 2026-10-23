@@ -25,3 +25,5 @@ The `main` branch has follow-up workspace and backend improvements beyond the `l
 - Desktop packaging now includes the workspace stylesheet.
 
 The source on `main` now includes these improvements beyond the `lionmax-v0.6.0` tag. A refreshed 0.6.0 installer has been built locally, but it has not been uploaded to GitHub. The published prerelease and its installer remain unchanged; the source branch and local installer do not constitute a new downloadable release. Windows binaries are unsigned by Authenticode, as described above.
+
+See [GitHub desktop updates](UPDATES.md) for how release discovery and verification work, how to use the Updates page, and the signed-release publishing requirements.
